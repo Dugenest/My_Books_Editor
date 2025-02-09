@@ -1,107 +1,130 @@
 package com.afci.data;
 
+import jakarta.persistence.*;
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Positive;
 import java.io.Serializable;
-import java.util.Date;
-import java.util.Set;
-import jakarta.persistence.CascadeType;
-import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
-import jakarta.persistence.OneToMany;
+import java.time.LocalDateTime;
 
 @Entity
+@Table(name = "payments")
 public class Payment implements Serializable {
+
     private static final long serialVersionUID = 1L;
 
-    // Attributs
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id_payment;
-    private float totalPrice;
-    private String paymentMethod;
-    private Date payment_date;
+    private Long id;
 
-    @OneToMany(mappedBy = "payment", cascade = CascadeType.ALL)
-    private Set<Order> orders;
+    @NotNull(message = "La date de paiement est obligatoire")
+    @Column(name = "payment_date", nullable = false)
+    private LocalDateTime paymentDate;
 
-    // Constructeur
+    @Positive(message = "Le montant doit être positif")
+    @Column(nullable = false)
+    private Double amount;
+
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
+    private PaymentStatus status = PaymentStatus.PENDING;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "payment_method", nullable = false)
+    private PaymentMethod paymentMethod;
+
+    @Column(name = "transaction_id")
+    private String transactionId;
+
+    @ManyToOne
+    @JoinColumn(name = "order_id", nullable = false)
+    private Order order;
+    
+    @ManyToOne
+    @JoinColumn(name = "customer_id")  // Assurez-vous que le champ de jointure correspond
+    private Customer customer;
+
+    // Constructeur sans paramètres
     public Payment() {
     }
 
-    public Payment(Long id_payment, float totalPrice, String paymentMethod, Date payment_date) {
-        this.id_payment = id_payment;
-        this.totalPrice = totalPrice;
+    // Constructeur avec paramètres
+    public Payment(LocalDateTime paymentDate, Double amount, PaymentStatus status, PaymentMethod paymentMethod, String transactionId, Order order) {
+        this.paymentDate = paymentDate;
+        this.amount = amount;
+        this.status = status;
         this.paymentMethod = paymentMethod;
-        this.payment_date = payment_date;
+        this.transactionId = transactionId;
+        this.order = order;
     }
 
     // Getters et Setters
-    public Long getId_payment() {
-        return id_payment;
+    public Long getId() {
+        return id;
     }
 
-    public void setId_payment(Long id_payment) {
-        this.id_payment = id_payment;
+    public void setId(Long id) {
+        this.id = id;
     }
 
-    public float getTotalPrice() {
-        return totalPrice;
+    public LocalDateTime getPaymentDate() {
+        return paymentDate;
     }
 
-    public void setTotalPrice(float totalPrice) {
-        this.totalPrice = totalPrice;
+    public void setPaymentDate(LocalDateTime paymentDate) {
+        this.paymentDate = paymentDate;
     }
 
-    public String getPaymentMethod() {
+    public Double getAmount() {
+        return amount;
+    }
+
+    public void setAmount(Double amount) {
+        this.amount = amount;
+    }
+
+    public PaymentStatus getStatus() {
+        return status;
+    }
+
+    public void setStatus(PaymentStatus status) {
+        this.status = status;
+    }
+
+    public PaymentMethod getPaymentMethod() {
         return paymentMethod;
     }
 
-    public void setPaymentMethod(String paymentMethod) {
+    public void setPaymentMethod(PaymentMethod paymentMethod) {
         this.paymentMethod = paymentMethod;
     }
 
-    public Date getPayment_date() {
-        return payment_date;
+    public String getTransactionId() {
+        return transactionId;
     }
 
-    public void setPayment_date(Date payment_date) {
-        this.payment_date = payment_date;
+    public void setTransactionId(String transactionId) {
+        this.transactionId = transactionId;
     }
 
-    public Set<Order> getOrders() {
-        return orders;
+    public Order getOrder() {
+        return order;
     }
 
-    public void setOrders(Set<Order> orders) {
-        this.orders = orders;
+    public void setOrder(Order order) {
+        this.order = order;
     }
 
-    // Méthodes
-    public void makePayment() {
-        // Logique pour effectuer le paiement
-        System.out.println("Payment made successfully.");
-    }
-
-    public void cancelPayment() {
-        // Logique pour annuler le paiement
-        System.out.println("Payment cancelled successfully.");
-    }
-
-    public void generateReceipt() {
-        // Logique pour générer le reçu
-        System.out.println("Receipt generated successfully.");
-    }
-
+    // Méthode toString
     @Override
     public String toString() {
         return "Payment{" +
-                "id_payment=" + id_payment +
-                ", totalPrice=" + totalPrice +
-                ", paymentMethod='" + paymentMethod + '\'' +
-                ", payment_date=" + payment_date +
-                '}';
+               "id=" + id +
+               ", paymentDate=" + paymentDate +
+               ", amount=" + amount +
+               ", status=" + status +
+               ", paymentMethod=" + paymentMethod +
+               ", transactionId='" + transactionId + '\'' +
+               ", order=" + (order != null ? order.getId() : "null") +  // Protection contre null pour éviter NPE
+               '}';
     }
-
-    
 }

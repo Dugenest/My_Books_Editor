@@ -1,75 +1,104 @@
 package com.afci.data;
 
-import java.io.Serializable;
+import jakarta.persistence.*;
+import java.util.Date;
+import java.util.HashSet;
 import java.util.Set;
-import jakarta.persistence.CascadeType;
-import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
-import jakarta.persistence.OneToMany;
 
 @Entity
-public class Author extends User implements Serializable {
+@Table(name = "authors")
+@PrimaryKeyJoinColumn(name = "user_id")
+@DiscriminatorValue("AUTHOR")
+public class Author extends User {
 
     private static final long serialVersionUID = 1L;
 
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long authorId;
-    private String authorName;
+    @Column(name = "author_lastname")
+    private String authorLastname;
+
+    @Column(name = "author_firstname")
     private String authorFirstname;
+    
+    @Column(name = "nationality")
     private String authorNationality;
 
-    // OneToMany relation with Book
+    @Column(length = 2000)
+    private String biography;
+
+    @Temporal(TemporalType.DATE)
+    private Date birthDate;
+
     @OneToMany(mappedBy = "author", cascade = CascadeType.ALL)
-    private Set<Book> books;
+    private Set<Book> authoredBooks = new HashSet<>();
 
-    // Constructors, Getters, Setters, toString
-    public Author() {
-    }
+    // Constructeurs
+    public Author() {}
 
-    public Author(String authorName, String authorFirstname, String authorNationality) {
-        this.authorName = authorName;
+    public Author(String username, String password, String email,
+                 String authorLastname, String authorFirstname, String authorNationality) {
+        super(username, password, email);
+        this.authorLastname = authorLastname;
         this.authorFirstname = authorFirstname;
         this.authorNationality = authorNationality;
     }
 
-    public Long getAuthorId() {
-        return authorId;
+    // Getters et Setters
+    public String getAuthorLastname() { return authorLastname; }
+    public void setAuthorLastname(String authorLastname) { this.authorLastname = authorLastname; }
+
+    public String getAuthorFirstname() { return authorFirstname; }
+    public void setAuthorFirstname(String authorFirstname) { 
+        this.authorFirstname = authorFirstname; 
     }
 
-    public void setAuthorId(Long authorId) {
-        this.authorId = authorId;
+    public String getAuthorNationality() { return authorNationality; }
+    public void setAuthorNationality(String authorNationality) { 
+        this.authorNationality = authorNationality; 
     }
 
-    public String getAuthorName() {
-        return authorName;
+    public String getBiography() { return biography; }
+    public void setBiography(String biography) { this.biography = biography; }
+
+    public Date getBirthDate() { return birthDate; }
+    public void setBirthDate(Date birthDate) { this.birthDate = birthDate; }
+
+    public Set<Book> getAuthoredBooks() { return authoredBooks; }
+    public void setAuthoredBooks(Set<Book> books) {
+        this.authoredBooks = books;
+        if (books != null) {
+            books.forEach(book -> book.setAuthor(this));
+        }
     }
 
-    public void setAuthorName(String authorName) {
-        this.authorName = authorName;
+    // Méthodes utilitaires
+    public void addAuthoredBook(Book book) {
+        if (book != null) {
+            authoredBooks.add(book);
+            book.setAuthor(this);
+        }
     }
 
-    public String getAuthorFirstname() {
-        return authorFirstname;
-    }
-
-    public void setAuthorFirstname(String authorFirstname) {
-        this.authorFirstname = authorFirstname;
-    }
-
-    public String getAuthorNationality() {
-        return authorNationality;
-    }
-
-    public void setAuthorNationality(String authorNationality) {
-        this.authorNationality = authorNationality;
+    public void removeAuthoredBook(Book book) {
+        if (book != null) {
+            authoredBooks.remove(book);
+            if (book.getAuthor() == this) {
+                book.setAuthor(null);
+            }
+        }
     }
 
     @Override
     public String toString() {
-        return "Author [authorId=" + authorId + ", authorName=" + authorName + ", authorFirstname=" + authorFirstname
-                + ", authorNationality=" + authorNationality + "]";
+        return "Author{" +
+               "id=" + getId() +
+               ", username='" + getUsername() + '\'' +
+               ", email='" + getEmail() + '\'' +
+               ", authorLastname='" + authorLastname + '\'' +
+               ", authorFirstname='" + authorFirstname + '\'' +
+               ", authorNationality='" + authorNationality + '\'' +
+               ", biography='" + (biography != null ? biography.substring(0, Math.min(biography.length(), 50)) + "..." : "null") + '\'' +
+               ", birthDate=" + birthDate +
+               ", numberOfAuthoredBooks=" + (authoredBooks != null ? authoredBooks.size() : 0) +
+               '}';
     }
 }

@@ -1,95 +1,99 @@
 package com.afci.data;
 
+import jakarta.persistence.*;
 import java.io.Serializable;
 import java.util.HashSet;
 import java.util.Set;
-import jakarta.persistence.CascadeType;
-import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
-import jakarta.persistence.OneToMany;
 
 @Entity
+@Table(name = "baskets")
 public class Basket implements Serializable {
+
     private static final long serialVersionUID = 1L;
 
-    // Attributes
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id_basket;
-    private float totalPrice;
+    private Long id;
 
-    @OneToMany(cascade = CascadeType.ALL, orphanRemoval = true)
-    private Set<String> books = new HashSet<>();
+    @OneToOne
+    @JoinColumn(name = "customer_id")
+    private Customer customer;
+    
+    @ManyToOne
+    private User user;
 
-    // Constructor
+    @ManyToMany
+    @JoinTable(
+        name = "basket_books",
+        joinColumns = @JoinColumn(name = "basket_id"),
+        inverseJoinColumns = @JoinColumn(name = "book_id")
+    )
+    private Set<Book> books = new HashSet<>();  // Set de livres dans le panier
+
+    @Column(name = "total_price")
+    private Double totalPrice = 0.0;
+
+    @Column(name = "total_items")
+    private Integer totalItems = 0;
+
+    // Constructeurs, Getters et Setters
     public Basket() {
     }
 
-    public Basket(Long id_basket, float totalPrice) {
-        this.id_basket = id_basket;
-        this.totalPrice = totalPrice;
+    // Ajouter un livre au panier
+    public void addBook(Book book) {
+        if (book != null) {
+            books.add(book);
+            updateTotals();
+        }
     }
 
-    // Getters and Setters
-    public Long getId_basket() {
-        return id_basket;
+    // Mettre à jour les totaux du panier
+    private void updateTotals() {
+        this.totalItems = books.size();
+        this.totalPrice = books.stream()
+            .mapToDouble(Book::getPrice)
+            .sum();
     }
 
-    public void setId_basket(Long id_basket) {
-        this.id_basket = id_basket;
-    }
-
-    public float getTotalPrice() {
-        return totalPrice;
-    }
-
-    public void setTotalPrice(float totalPrice) {
-        this.totalPrice = totalPrice;
-    }
-
-    public Set<String> getBooks() {
+    // Getter pour les livres (retourne un Set<Book>)
+    public Set<Book> getBooks() {
         return books;
     }
 
-    public void setBooks(Set<String> books) {
+    // Setter pour les livres
+    public void setBooks(Set<Book> books) {
         this.books = books;
+        updateTotals();
     }
 
-    // Methods
-    public void addBook(String bookData) {
-        books.add(bookData);
-        calculTotal();
+    // Getter pour le client
+    public Customer getCustomer() {
+        return customer;
     }
 
-    public void deleteBook(String bookId) {
-        books.remove(bookId);
-        calculTotal();
+    // Setter pour le client
+    public void setCustomer(Customer customer) {
+        this.customer = customer;
     }
 
-    public void removeBook(String bookId) {
-        books.remove(bookId);
-        calculTotal();
-    }
-
-    public void calculTotal() {
-        // Assuming each book has a fixed price for simplicity
-        float pricePerBook = 10.0f;
-        this.totalPrice = books.size() * pricePerBook;
-    }
-
-    public void emptyCart() {
-        books.clear();
-        calculTotal();
-    }
-
+    // Autres méthodes...
+    public Object getBasketId() {
+		// TODO Auto-generated method stub
+		return null;
+	}
+    
+    
     @Override
     public String toString() {
         return "Basket{" +
-                "id_basket=" + id_basket +
-                ", totalPrice=" + totalPrice +
-                ", books=" + books +
-                '}';
+               "id=" + id +
+               ", customer=" + (customer != null ? customer.getUsername() : "null") +
+               ", totalItems=" + totalItems +
+               ", totalPrice=" + totalPrice +
+               '}';
     }
+
+	
+
 }

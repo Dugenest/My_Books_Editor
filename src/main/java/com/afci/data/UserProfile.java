@@ -1,29 +1,45 @@
 package com.afci.data;
+
+import java.io.Serializable;
 import java.util.Date;
 
-public class UserProfile {
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.Lob;
+import jakarta.persistence.Table;
+import jakarta.persistence.Temporal;
+import jakarta.persistence.TemporalType;
+import jakarta.validation.constraints.Email;
+
+@Entity
+@Table(name = "user_profiles")
+public class UserProfile implements Serializable {
+
+    private static final long serialVersionUID = 1L;
+
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "id_profile")
     private Long id_profile;
-    private String lastname;
-    private String firstname;
+
+    @Temporal(TemporalType.DATE)
     private Date birthday;
+
+    @Column(length = 20)
     private String phone;
+
+    @Email(message = "Format d'email invalide")
+    @Column(unique = true)
     private String email;
+
+    @Column(length = 255)
     private String address;
 
-    // Constructeur
-    public UserProfile() {
-    }
-    
-    public UserProfile(Long id_profile, String lastname, String firstname, Date birthday, 
-                  String phone, String email, String address) {
-        this.id_profile = id_profile;
-        this.lastname = lastname;
-        this.firstname = firstname;
-        this.birthday = birthday;
-        this.phone = phone;
-        this.email = email;
-        this.address = address;
-    }
+    @Lob
+    private byte[] profilePicture;  // Stockage de la photo de profil
 
     // Getters et Setters
     public Long getId_profile() {
@@ -32,22 +48,6 @@ public class UserProfile {
 
     public void setId_profile(Long id_profile) {
         this.id_profile = id_profile;
-    }
-
-    public String getLastname() {
-        return lastname;
-    }
-
-    public void setLastname(String lastname) {
-        this.lastname = lastname;
-    }
-
-    public String getFirstname() {
-        return firstname;
-    }
-
-    public void setFirstname(String firstname) {
-        this.firstname = firstname;
     }
 
     public Date getBirthday() {
@@ -82,27 +82,31 @@ public class UserProfile {
         this.address = address;
     }
 
-    // Méthodes
-    public String getProfileDetails(Long profileId) {
-        // Retourne les détails du profil
-        return null;
+    public byte[] getProfilePicture() {
+        return profilePicture;
     }
 
-    public void updateProfile(String profileData) {
-        // Mise à jour du profil
+    public void setProfilePicture(byte[] profilePicture) {
+        this.profilePicture = profilePicture;
     }
 
-    public void deleteProfile(Long profileId) {
-        // Suppression du profil
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (!(o instanceof UserProfile)) return false;
+        UserProfile that = (UserProfile) o;
+        return id_profile != null && id_profile.equals(that.id_profile);
     }
 
-    //methode toString
-    @Override   
+    @Override
+    public int hashCode() {
+        return getClass().hashCode();
+    }
+
+    @Override
     public String toString() {
-            return "UserProfile{" +
+        return "UserProfile{" +
                 "id_profile=" + id_profile +
-                ", lastname='" + lastname + '\'' +
-                ", firstname='" + firstname + '\'' +
                 ", birthday=" + birthday +
                 ", phone='" + phone + '\'' +
                 ", email='" + email + '\'' +

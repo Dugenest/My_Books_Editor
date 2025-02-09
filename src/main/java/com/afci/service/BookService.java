@@ -1,88 +1,94 @@
 package com.afci.service;
 
-import java.util.List;
-
-import org.springframework.stereotype.Service;
-
 import com.afci.data.Book;
 import com.afci.data.BookRepository;
-import com.afci.exception.NotFoundException;
-import com.afci.exception.DuplicateException;
-import com.afci.exception.InvalidDataException;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import java.util.List;
+import java.util.Optional;
 
 @Service
+@Transactional
 public class BookService {
 
-	private final BookRepository bookRepository;
+    @Autowired
+    private BookRepository bookRepository;
 
-	public BookService(BookRepository bookRepository) {
-		this.bookRepository = bookRepository;
-	}
+    /**
+     * Récupère tous les livres de la base de données.
+     * @return Liste de tous les livres.
+     */
+    public List<Book> getAllBooks() {
+        return bookRepository.findAll();
+    }
 
-	// Obtenir tous les livres
-	public List<Book> getAllBooks() {
-		return (List<Book>) bookRepository.findAll();
-	}
+    /**
+     * Recherche un livre par son identifiant.
+     * @param id Identifiant du livre.
+     * @return Un objet Optional contenant le livre s'il est trouvé.
+     */
+    public Optional<Book> getBookById(Long id) {
+        return bookRepository.findById(id);
+    }
 
-	// Vérifie si un livre existe par ID
-	public boolean existsById(Long id) {
-		return bookRepository.existsById((long) id);
-	}
+    /**
+     * Ajoute un nouveau livre à la base de données.
+     * @param book Le livre à enregistrer.
+     * @return Le livre enregistré.
+     */
+    public Book createBook(Book book) {
+        return bookRepository.save(book);
+    }
 
-	// Obtenir un livre par son ID
-	public Book getBookById(Long id) {
-		return bookRepository.findById(id)
-				.orElseThrow(() -> new NotFoundException("Book not found with id: " + id));
-	}
+    /**
+     * Met à jour un livre existant dans la base de données.
+     * @param book Le livre avec les nouvelles informations.
+     * @return Le livre mis à jour.
+     * @throws RuntimeException Si le livre avec l'ID donné n'existe pas.
+     */
+    public Book updateBook(Book book) {
+        if (bookRepository.existsById(book.getId())) {
+            return bookRepository.save(book);
+        }
+        throw new RuntimeException("Livre non trouvé avec l'ID : " + book.getId());
+    }
 
-	// Ajout d'un livre
-	public Book addBook(Book book) {
-		// Vérification de l'ID du livre
-		if (book.getIdBook() != 0 && bookRepository.existsById((long) book.getIdBook())) {
-			throw new DuplicateException("Book with ID " + book.getIdBook() + " already exists.");
-		}
+    /**
+     * Supprime un livre par son identifiant.
+     * @param id Identifiant du livre à supprimer.
+     */
+    public void deleteBook(Long id) {
+        bookRepository.deleteById(id);
+    }
 
-		// Vérification des données invalides
-		validateBookData(book);
+    /**
+     * Recherche des livres dont le nom ou le prénom de l'auteur contient un texte donné (insensible à la casse).
+     * @param lastName Nom de famille de l'auteur.
+     * @param firstName Prénom de l'auteur.
+     * @return Liste des livres correspondant à la recherche.
+     */
+    public List<Book> findByAuthorName(String lastName, String firstName) {
+        return bookRepository.findByAuthor_LastNameContainingIgnoreCaseOrAuthor_FirstNameContainingIgnoreCase(lastName, firstName);
+    }
 
-		// Sauvegarde du livre
-		return bookRepository.save(book);
-	}
 
-	// Méthode de validation centralisée
-	private void validateBookData(Book book) {
-		if (book.getTitle() == null || book.getTitle().trim().isEmpty()) {
-			throw new InvalidDataException("Book title cannot be null or empty.");
-		}
+    /**
+     * Recherche des livres dont le titre contient un texte donné (insensible à la casse).
+     * @param title Partie du titre à rechercher.
+     * @return Liste des livres correspondant à la recherche.
+     */
+    public List<Book> findBooksByTitle(String title) {
+        return bookRepository.findByTitleContainingIgnoreCase(title);
+    }
 
-		if (book.getAuthor() == null || book.getAuthor().getAuthorId() == null) {
-			throw new InvalidDataException("Author ID is required.");
-		}
-
-		if (book.getCategories() == null || book.getCategories().isEmpty()) {
-			throw new InvalidDataException("At least one category is required.");
-		}
-	}
-
-	// Mettre à jour un livre existant
-	public Book updateBook(Long id, Book bookDetails) {
-		Book existingBook = getBookById(id);
-
-		// Vérification des données invalides pour la mise à jour
-		if (bookDetails.getTitle() == null || bookDetails.getTitle().isEmpty()) {
-			throw new InvalidDataException("Book title cannot be null or empty.");
-		}
-
-		// Mettre à jour les champs
-		existingBook.setTitle(bookDetails.getTitle());
-		existingBook.setDateBook(bookDetails.getDateBook());
-
-		return bookRepository.save(existingBook);
-	}
-
-	// Supprimer un livre
-	public void deleteBook(Long id) {
-		Book existingBook = getBookById(id);
-		bookRepository.delete(existingBook);
-	}
+    /**
+     * Recherche des livres appartenant à une catégorie spécifique.
+     * @param category Nom de la catégorie.
+     * @return Liste des livres de cette catégorie.
+     */
+    public List<Book> findBooksByCategory(String category) {
+        return bookRepository.findByCategory_Name(category);
+    }
 }

@@ -1,79 +1,147 @@
 package com.afci.data;
 
+import jakarta.persistence.*;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
 import java.io.Serializable;
-import java.util.Set;
-import jakarta.persistence.CascadeType;
-import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
-import jakarta.persistence.OneToMany;
+import java.util.Date;
 
 @Entity
+@Table(name = "serials")
 public class Serial implements Serializable {
+
     private static final long serialVersionUID = 1L;
 
-    // Attributes
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id_serial;
-    private String name;
+    private Long id;
+    
+    @Column(name = "title")
+    private String title;  // Si vous voulez que ce titre vienne de la classe Book, pensez à un getter sur Book.
 
-    @OneToMany(mappedBy = "serial", cascade = CascadeType.ALL)
-    private Set<Book> books;
+    @NotBlank(message = "Le numéro de série est obligatoire")
+    @Column(unique = true, nullable = false)
+    private String serialNumber;
 
-    @OneToMany(mappedBy = "serial", cascade = CascadeType.ALL)
-    private Set<Author> authors;
+    @NotNull(message = "La date de création est obligatoire")
+    @Temporal(TemporalType.TIMESTAMP)
+    @Column(name = "creation_date")
+    private Date creationDate;
 
-    // Constructeur
+    @Temporal(TemporalType.TIMESTAMP)
+    @Column(name = "activation_date")
+    private Date activationDate;
+
+    @Temporal(TemporalType.TIMESTAMP)
+    @Column(name = "expiration_date")
+    private Date expirationDate;
+
+    @Column(nullable = false)
+    private boolean active = false;
+
+    @ManyToOne
+    @JoinColumn(name = "book_id")
+    private Book book;
+
+    @ManyToOne
+    @JoinColumn(name = "customer_id")
+    private Customer customer;
+    
+    @ManyToOne
+    @JoinColumn(name = "author_id")
+    private Author author;
+
+    // Constructeurs
     public Serial() {
+        this.creationDate = new Date();
     }
 
-    public Serial(Long id_serial, String name) {
-        this.id_serial = id_serial;
-        this.name = name;
+    public Serial(String serialNumber, Book book) {
+        this();
+        this.serialNumber = serialNumber;
+        this.book = book;
+        this.title = book != null ? book.getTitle() : null;  // Assure que le title est mis à jour depuis Book
     }
 
     // Getters et Setters
-    public Long getId_serial() {
-        return id_serial;
+    public Long getId() { return id; }
+    public void setId(Long id) { this.id = id; }
+    
+    public String getTitle() { return title; }
+    public void setTitle(String title) { this.title = title; }
+
+    public String getSerialNumber() { return serialNumber; }
+    public void setSerialNumber(String serialNumber) { this.serialNumber = serialNumber; }
+
+    public Date getCreationDate() { return creationDate; }
+    public void setCreationDate(Date creationDate) { this.creationDate = creationDate; }
+
+    public Date getActivationDate() { return activationDate; }
+    public void setActivationDate(Date activationDate) { this.activationDate = activationDate; }
+
+    public Date getExpirationDate() { return expirationDate; }
+    public void setExpirationDate(Date expirationDate) { this.expirationDate = expirationDate; }
+
+    public boolean isActive() { return active; }
+    public void setActive(boolean active) { this.active = active; }
+
+    public Book getBook() { return book; }
+    public void setBook(Book book) { 
+        this.book = book; 
+        this.title = book != null ? book.getTitle() : null;  // Mise à jour du title quand Book change
     }
 
-    public void setId_serial(Long id_serial) {
-        this.id_serial = id_serial;
+    public Customer getCustomer() { return customer; }
+    public void setCustomer(Customer customer) { this.customer = customer; }
+
+    // Méthodes métier
+    public boolean activate(Customer customer) {
+        if (!active && customer != null) {
+            this.customer = customer;
+            this.active = true;
+            this.activationDate = new Date();
+            // Par exemple, validité de 1 an
+            this.expirationDate = new Date(activationDate.getTime() + 365L * 24 * 60 * 60 * 1000);
+            return true;
+        }
+        return false;
     }
 
-    public String getName() {
-        return name;
+    public boolean isValid() {
+        if (!active) return false;
+        Date now = new Date();
+        return now.after(activationDate) && now.before(expirationDate);
     }
 
-    public void setName(String name) {
-        this.name = name;
+    public void deactivate() {
+        this.active = false;
+        this.expirationDate = new Date();
     }
 
-    public Set<Book> getBooks() {
-        return books;
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (!(o instanceof Serial)) return false;
+        Serial serial = (Serial) o;
+        return id != null && id.equals(serial.getId());
     }
 
-    public void setBooks(Set<Book> books) {
-        this.books = books;
-    }
-
-    public Set<Author> getAuthors() {
-        return authors;
-    }
-
-    public void setAuthors(Set<Author> authors) {
-        this.authors = authors;
+    @Override
+    public int hashCode() {
+        return getClass().hashCode();
     }
 
     @Override
     public String toString() {
         return "Serial{" +
-                "id_serial=" + id_serial +
-                ", name='" + name + '\'' +
-                ", books=" + books +
-                ", authors=" + authors +
-                '}';
+               "id=" + id +
+               ", serialNumber='" + serialNumber + '\'' +
+               ", creationDate=" + creationDate +
+               ", activationDate=" + activationDate +
+               ", expirationDate=" + expirationDate +
+               ", active=" + active +
+               ", book=" + (book != null ? book.getTitle() : "null") +
+               ", customer=" + (customer != null ? customer.getUsername() : "null") +
+               '}';
     }
 }

@@ -1,99 +1,87 @@
 package com.afci.controller;
 
 import java.util.List;
+import java.util.Optional;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
-import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.afci.data.Category;
-import com.afci.exception.CategoryNotFoundException;
 import com.afci.service.CategoryService;
 
 import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.responses.ApiResponse;
-import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.parameters.RequestBody;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
+
 
 @RestController
-@RequestMapping("/categories")
-@Tag(name = "Category Management", description = "APIs for managing categories")
+@RequestMapping("/api/categories")
+@CrossOrigin(origins = "*")
+@Tag(name = "Category Management", description = "Category operations")
 public class CategoryController {
 
-	private final CategoryService cs;
+    @Autowired
+    private CategoryService categoryService;
 
-	public CategoryController(CategoryService cs) {
-		this.cs = cs;
-	}
+    @Operation(summary = "Get all categories")
+    @GetMapping
+    public ResponseEntity<List<Category>> getAllCategories() {
+        return ResponseEntity.ok(categoryService.getAllCategories());
+    }
 
-	@GetMapping
-	@Operation(summary = "List all categories", description = "Fetches all categories available in the system.")
-	@ApiResponse(responseCode = "200", description = "Successfully retrieved list of categories")
-	public ResponseEntity<List<Category>> getAllCategories() {
-		List<Category> categories = cs.getAllCategorys();
-		if (categories.isEmpty()) {
-			return new ResponseEntity<>(HttpStatus.NO_CONTENT);
-		}
-		return new ResponseEntity<>(categories, HttpStatus.OK);
-	}
+    @Operation(summary = "Get category by ID")
+    @GetMapping("/{id}")
+    public ResponseEntity<Optional<Category>> getCategoryById(
+        @Parameter(description = "Category ID") @PathVariable Long id
+    ) {
+        return ResponseEntity.ok(categoryService.getCategoryById(id));
+    }
 
-	@GetMapping("/{id}")
-	@Operation(summary = "Get a category by ID", description = "Fetches a single category using its ID.")
-	@ApiResponses({
-		@ApiResponse(responseCode = "200", description = "Category found"),
-		@ApiResponse(responseCode = "404", description = "Category not found")
-	})
-	public ResponseEntity<Category> getCategoryById(@PathVariable Long id) {
-		try {
-			Category category = cs.getCategoryById(id);
-			return ResponseEntity.ok(category);
-		} catch (CategoryNotFoundException ex) {
-			return ResponseEntity.status(HttpStatus.NOT_FOUND).body(null);
-		}
-	}
+    @Operation(summary = "Get books by category")
+    @GetMapping("/{id}/books")
+    public ResponseEntity<Object> getBooksByCategory(
+        @Parameter(description = "Category ID") @PathVariable Long id
+    ) {
+        return ResponseEntity.ok(categoryService.getBooksByCategory(id));
+    }
 
-	@PostMapping
-	@Operation(summary = "Add a new category", description = "Creates a new category.")
-	@ApiResponse(responseCode = "201", description = "Category successfully created")
-	public ResponseEntity<Category> addCategory(@RequestBody Category c) {
-		Category createdCategory = cs.addCategory(c);
-		return new ResponseEntity<>(createdCategory, HttpStatus.CREATED);
-	}
+    @Operation(summary = "Create category")
+    @PostMapping
+    public ResponseEntity<Category> createCategory(
+        @Parameter(description = "Category details") 
+        @Valid @RequestBody Category category
+    ) {
+        return new ResponseEntity<>(categoryService.createCategory(category), 
+            HttpStatus.CREATED);
+    }
 
-	@PutMapping("/{id}")
-	@Operation(summary = "Update a category", description = "Updates an existing category.")
-	@ApiResponses({
-		@ApiResponse(responseCode = "200", description = "Category updated successfully"),
-		@ApiResponse(responseCode = "404", description = "Category not found")
-	})
-	public ResponseEntity<Category> updateCategory(@PathVariable Long id, @RequestBody Category category) {
-		try {
-			Category updatedCategory = cs.updateCategory(id, category);
-			return new ResponseEntity<>(updatedCategory, HttpStatus.OK);
-		} catch (CategoryNotFoundException e) {
-			return new ResponseEntity<>(null, HttpStatus.NOT_FOUND);
-		}
-	}
+    @Operation(summary = "Update category")
+    @PutMapping("/{id}")
+    public ResponseEntity<Category> updateCategory(
+        @Parameter(description = "Category ID") @PathVariable Long id,
+        @Parameter(description = "Category details") 
+        @Valid @RequestBody Category category
+    ) {
+        return ResponseEntity.ok(categoryService.updateCategory(category));
+    }
 
-	@DeleteMapping("/{id}")
-	@Operation(summary = "Delete a category", description = "Removes a category by its ID.")
-	@ApiResponses({
-		@ApiResponse(responseCode = "204", description = "Category deleted successfully"),
-		@ApiResponse(responseCode = "404", description = "Category not found")
-	})
-	public ResponseEntity<Void> deleteCategory(@PathVariable Long id) {
-		try {
-			cs.deleteCategory(id);
-			return new ResponseEntity<>(HttpStatus.NO_CONTENT);
-		} catch (CategoryNotFoundException e) {
-			return new ResponseEntity<>(HttpStatus.NOT_FOUND);
-		}
-	}
+    @Operation(summary = "Delete category")
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Void> deleteCategory(
+        @Parameter(description = "Category ID") @PathVariable Long id
+    ) {
+        categoryService.deleteCategory(id);
+        return ResponseEntity.noContent().build();
+    }
 }

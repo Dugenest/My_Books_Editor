@@ -1,112 +1,82 @@
 package com.afci.data;
 
-import java.io.Serializable;
+import jakarta.persistence.*;
+import java.util.HashSet;
 import java.util.Set;
-import jakarta.persistence.CascadeType;
-import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
-import jakarta.persistence.OneToMany;
 
 @Entity
-public class Administrator extends User implements Serializable {
+@Table(name = "administrators")
+@PrimaryKeyJoinColumn(name = "user_id")
+@DiscriminatorValue("ADMIN")
+public class Administrator extends User {
+
     private static final long serialVersionUID = 1L;
 
-    // Attributs
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long adminId;
-    
     @OneToMany(mappedBy = "administrator", cascade = CascadeType.ALL)
-    private Set<Book> books;
+    private Set<Book> managedBooks = new HashSet<>();
 
     @OneToMany(mappedBy = "administrator", cascade = CascadeType.ALL)
-    private Set<Author> authors;
+    private Set<Order> managedOrders = new HashSet<>();
 
-    @OneToMany(mappedBy = "administrator", cascade = CascadeType.ALL)
-    private Set<Order> orders;
-    
-    // Constructeur
+    // Constructeurs
     public Administrator() {
+        super();
+    }
+
+    public Administrator(String username, String password, String email) {
+        super(username, password, email);
     }
 
     // Getters et Setters
-    public Long getAdminId() {
-        return adminId;
+    public Set<Book> getManagedBooks() { return managedBooks; }
+    public void setManagedBooks(Set<Book> books) {
+        this.managedBooks = books;
+        if (books != null) {
+            books.forEach(book -> book.setAdministrator(this));
+        }
     }
 
-    public void setAdminId(Long adminId) {
-        this.adminId = adminId;
+    public Set<Order> getManagedOrders() { return managedOrders; }
+    public void setManagedOrders(Set<Order> orders) {
+        this.managedOrders = orders;
+        if (orders != null) {
+            orders.forEach(order -> order.setAdministrator(this));
+        }
     }
 
-    public Set<Book> getBooks() {
-        return books;
+    // Méthodes métier
+    public void validateOrder(Order order) {
+        if (order != null) {
+            order.setStatus(OrderStatus.VALIDATED);
+            order.setAdministrator(this);
+            managedOrders.add(order);
+        }
     }
 
-    public void setBooks(Set<Book> books) {
-        this.books = books;
+    public void addBook(Book book) {
+        if (book != null) {
+            managedBooks.add(book);
+            book.setAdministrator(this);
+        }
     }
 
-    public Set<Author> getAuthors() {
-        return authors;
+    public void removeBook(Book book) {
+        if (book != null) {
+            managedBooks.remove(book);
+            if (book.getAdministrator() == this) {
+                book.setAdministrator(null);
+            }
+        }
     }
 
-    public void setAuthors(Set<Author> authors) {
-        this.authors = authors;
-    }
-
-    public Set<Order> getOrders() {
-        return orders;
-    }
-
-    public void setOrders(Set<Order> orders) {
-        this.orders = orders;
-    }
-
-    // Méthodes
-    public void getAuthorDetails(int authorId) {
-        // Récupère les détails d'un auteur
-    }
-
-    public void updateAuthor(String authorData) {
-        // Met à jour un auteur
-    }
-
-    public void deleteAuthor(int authorId) {
-        // Supprime un auteur
-    }
-
-    public void addBook(String bookData) {
-        // Ajoute un livre
-    }
-
-    public void updateBook(String bookData) {
-        // Met à jour un livre
-    }
-
-    public void deleteBook(String bookId) {
-        // Supprime un livre
-    }
-
-    public void getOrderDetails(int orderId) {
-        // Récupère les détails d'une commande
-    }
-
-    @Override
-    public boolean isAdmin() {
-        return super.isAdmin();
-    }
-
-    // Méthode toString
     @Override
     public String toString() {
         return "Administrator{" +
-                "id_user=" + getUserId() +
-                ", username='" + getUsername() + '\'' +
-                ", password='" + getPassword() + '\'' +
-                ", role=" + getRole() +
-                '}';
+               "id=" + getId() +
+               ", username='" + getUsername() + '\'' +
+               ", email='" + getEmail() + '\'' +
+               ", managedBooks=" + (managedBooks != null ? managedBooks.size() : 0) +
+               ", managedOrders=" + (managedOrders != null ? managedOrders.size() : 0) +
+               '}';
     }
-
 }

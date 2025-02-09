@@ -1,48 +1,55 @@
 package com.afci.service;
 
-import java.util.List;
-
-import org.springframework.stereotype.Service;
-
 import com.afci.data.Category;
 import com.afci.data.CategoryRepository;
-import com.afci.exception.NotFoundException;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import java.util.List;
+import java.util.Optional;
 
 @Service
+@Transactional
 public class CategoryService {
 
-    private final CategoryRepository categoryRepository;
+    @Autowired
+    private CategoryRepository categoryRepository;
 
-    public CategoryService(CategoryRepository categoryRepository) {
-        this.categoryRepository = categoryRepository;
+    public List<Category> getAllCategories() {
+        return categoryRepository.findAll();
     }
 
-    // Obtenir toutes les catégories
-    public List<Category> getAllCategorys() {
-        return (List<Category>) categoryRepository.findAll();
+    public Optional<Category> getCategoryById(Long id) {
+        return categoryRepository.findById(id);
     }
 
-    // Obtenir une catégorie par ID
-    public Category getCategoryById(Long id) {
-        return categoryRepository.findById(id)
-                .orElseThrow(() -> new NotFoundException("Not found with id: " + id));
-    }
-
-    // Ajouter une catégorie
-    public Category addCategory(Category category) {
+    public Category createCategory(Category category) {
         return categoryRepository.save(category);
     }
 
-    // Mettre à jour une catégorie existante
-    public Category updateCategory(Long id, Category categoryDetails) {
-        Category category = getCategoryById(id); // Lève une exception si non trouvé
-        category.setNameCategory(categoryDetails.getNameCategory());
-        return categoryRepository.save(category);
+    public Category updateCategory(Category category) {
+        if (categoryRepository.existsById(category.getId())) {
+            return categoryRepository.save(category);
+        }
+        throw new RuntimeException("Catégorie non trouvée avec l'ID : " + category.getId());
     }
 
-    // Supprimer une catégorie
     public void deleteCategory(Long id) {
-        Category category = getCategoryById(id); // Lève une exception si non trouvé
-        categoryRepository.delete(category);
+        categoryRepository.deleteById(id);
     }
+
+    public Category findByName(String name) {
+        return categoryRepository.findByNameIgnoreCase(name);
+    }
+
+	public Object getBooksByCategory1(Long id) {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	public Object getBooksByCategory(Long id) {
+		// TODO Auto-generated method stub
+		return null;
+	}
 }

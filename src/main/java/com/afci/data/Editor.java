@@ -1,109 +1,108 @@
 package com.afci.data;
 
+import jakarta.persistence.*;
+import jakarta.validation.constraints.NotBlank;
 import java.io.Serializable;
+import java.util.HashSet;
 import java.util.Set;
-import jakarta.persistence.CascadeType;
-import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
-import jakarta.persistence.OneToMany;
 
 @Entity
+@Table(name = "editors")
 public class Editor implements Serializable {
+
     private static final long serialVersionUID = 1L;
 
-    // Attributs
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id_editor;
+    private Long id;
+
+    @NotBlank(message = "Le nom est obligatoire")
+    @Column(nullable = false)
     private String name;
+
     private String address;
+    private String phone;
+    private String email;
+    private String companyName;
 
-    @OneToMany(mappedBy = "editor", cascade = CascadeType.ALL)
-    private Set<Book> books;
+    @OneToMany(mappedBy = "editor", cascade = CascadeType.ALL, orphanRemoval = true)
+    private Set<Book> books = new HashSet<>();
 
-    // Constructeur
-    public Editor(Long id_editor, String name, String address) {
-        this.id_editor = id_editor;
+    // Constructeurs
+    public Editor() {}
+
+    public Editor(String name, String address, String phone, String email, String companyName) {
         this.name = name;
         this.address = address;
+        this.phone = phone;
+        this.email = email;
+        this.companyName = companyName;
     }
 
     // Getters et Setters
-    public Long getId_editor() {
-        return id_editor;
-    }
+    public Long getId() { return id; }
+    public void setId(Long id) { this.id = id; }
 
-    public void setId_editor(Long id_editor) {
-        this.id_editor = id_editor;
-    }
+    public String getName() { return name; }
+    public void setName(String name) { this.name = name; }
 
-    public String getName() {
-        return name;
-    }
+    public String getAddress() { return address; }
+    public void setAddress(String address) { this.address = address; }
 
-    public void setName(String name) {
-        this.name = name;
-    }
+    public String getPhone() { return phone; }
+    public void setPhone(String phone) { this.phone = phone; }
 
-    public String getAddress() {
-        return address;
-    }
+    public String getEmail() { return email; }
+    public void setEmail(String email) { this.email = email; }
 
-    public void setAddress(String address) {
-        this.address = address;
-    }
+    public String getCompanyName() { return companyName; }
+    public void setCompanyName(String companyName) { this.companyName = companyName; }
 
-    public Set<Book> getBooks() {
-        return books;
-    }
-
+    public Set<Book> getBooks() { return books; }
     public void setBooks(Set<Book> books) {
         this.books = books;
-    }
-
-    // Méthodes
-    public void addEditor(String editorData) {
-        // Logic to add an editor
-        // Example: parse editorData and set the fields
-        String[] data = editorData.split(",");
-        this.id_editor = Long.valueOf(data[0]);
-        this.name = data[1];
-        this.address = data[2];
-    }
-
-    public String getEditorDetails(Long editorId) {
-        // Logic to get editor details
-        // Example: return details if id matches
-        if (this.id_editor.equals(editorId)) {
-            return this.toString();
-        }
-        return "Editor not found";
-    }
-
-    public void updateEditor(String editorData) {
-        // Logic to update an editor
-        // Example: parse editorData and update the fields
-        String[] data = editorData.split(",");
-        if (this.id_editor.equals(Long.valueOf(data[0]))) {
-            this.name = data[1];
-            this.address = data[2];
+        if (books != null) {
+            books.forEach(book -> book.setEditor(this));
         }
     }
 
-    public void deleteEditor(Long editorId) {
-        // Logic to delete an editor
-        // Example: clear fields if id matches
-        if (this.id_editor.equals(editorId)) {
-            this.id_editor = null;
-            this.name = null;
-            this.address = null;
+    // Méthodes utilitaires
+    public void addBook(Book book) {
+        if (book != null) {
+            books.add(book);
+            book.setEditor(this);
+        }
+    }
+
+    public void removeBook(Book book) {
+        if (book != null) {
+            books.remove(book);
+            if (book.getEditor() == this) {
+                book.setEditor(null);
+            }
         }
     }
 
     @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (!(o instanceof Editor)) return false;
+        Editor editor = (Editor) o;
+        return id != null && id.equals(editor.getId());
+    }
+
+    @Override
+    public int hashCode() {
+        return getClass().hashCode();
+    }
+
+    @Override
     public String toString() {
-        return "Editor [id_editor=" + id_editor + ", name=" + name + ", address=" + address + "]";
+        return "Editor{" +
+               "id=" + id +
+               ", name='" + name + '\'' +
+               ", email='" + email + '\'' +
+               ", books=" + (books != null ? books.size() : 0) +
+               '}';
     }
 }

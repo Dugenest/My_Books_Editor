@@ -1,99 +1,98 @@
 package com.afci.data;
 
+import jakarta.persistence.*;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
 import java.io.Serializable;
 import java.util.Date;
-import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
-import jakarta.persistence.JoinColumn;
-import jakarta.persistence.ManyToOne;
-
 
 @Entity
+@Table(name = "comments")
 public class Comment implements Serializable {
+
     private static final long serialVersionUID = 1L;
 
-    // Attributs
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id_comment;
-    private Date comment_date;
-    private String comment;
+    private Long id;
+
+    @NotNull(message = "La date du commentaire est obligatoire")
+    @Temporal(TemporalType.TIMESTAMP)
+    @Column(name = "comment_date")
+    private Date commentDate;
+
+    @NotBlank(message = "Le contenu du commentaire est obligatoire")
+    @Column(length = 1000)
+    private String content;
 
     @ManyToOne
     @JoinColumn(name = "customer_id")
     private Customer customer;
 
-    // Constructeur
+    @ManyToOne
+    @JoinColumn(name = "book_id")
+    private Book book;
+    
+    @ManyToOne
+    @JoinColumn(name = "user_id")
+    private User user;
+
+
+    // Constructeurs
     public Comment() {
+        this.commentDate = new Date();
     }
 
-    public Comment(Long id_comment, Date comment_date, String comment) {
-        this.id_comment = id_comment;
-        this.comment_date = comment_date;
-        this.comment = comment;
+    public Comment(String content, Customer customer, Book book) {
+        this();
+        this.content = content;
+        this.customer = customer;
+        this.book = book;
     }
 
     // Getters et Setters
-    public Long getId_comment() {
-        return id_comment;
+    public Long getId() { return id; }
+    public void setId(Long id) { this.id = id; }
+
+    public Date getCommentDate() { return commentDate; }
+    public void setCommentDate(Date commentDate) { this.commentDate = commentDate; }
+
+    public String getContent() { return content; }
+    public void setContent(String content) { this.content = content; }
+
+    public Customer getCustomer() { return customer; }
+    public void setCustomer(Customer customer) { this.customer = customer; }
+
+    public Book getBook() { return book; }
+    public void setBook(Book book) { this.book = book; }
+
+    // Méthodes métier
+    public void updateComment(String newContent) {
+        this.content = newContent;
+        this.commentDate = new Date();
     }
 
-    public void setId_comment(Long id_comment) {
-        this.id_comment = id_comment;
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (!(o instanceof Comment)) return false;
+        Comment comment = (Comment) o;
+        return id != null && id.equals(comment.getId());
     }
 
-    public Date getComment_date() {
-        return comment_date;
-    }
-
-    public void setComment_date(Date comment_date) {
-        this.comment_date = comment_date;
-    }
-
-    public String getComment() {
-        return comment;
-    }
-
-    public void setComment(String comment) {
-        this.comment = comment;
-    }
-
-    // Méthodes
-    public void addComment(String commentData) {
-        this.comment = commentData;
-        this.comment_date = new Date(); // Set the current date
-    }
-
-    public void updateComment(Long commentId, String newCommentData) {
-        if (this.id_comment == commentId) {
-            this.comment = newCommentData;
-            this.comment_date = new Date(); // Update the date to current date
-        }
-    }
-
-    public void deleteComment(Long commentId) {
-        if (this.id_comment == commentId) {
-            this.comment = null;
-            this.comment_date = null;
-        }
-    }
-
-    public String getComment(Long commentId) {
-        if (this.id_comment == commentId) {
-            return this.comment;
-        }
-        return null;
+    @Override
+    public int hashCode() {
+        return getClass().hashCode();
     }
 
     @Override
     public String toString() {
         return "Comment{" +
-                "id_comment=" + id_comment +
-                ", comment_date=" + comment_date +
-                ", comment='" + comment + '\'' +
-                ", customer=" + (customer != null ? customer.getIdCustomer() : "null") +
-                '}';
+               "id=" + id +
+               ", commentDate=" + commentDate +
+               ", content='" + (content != null ? content.substring(0, Math.min(content.length(), 50)) + "..." : "null") + '\'' +
+               ", customer=" + (customer != null ? customer.getUsername() : "null") +
+               ", book=" + (book != null ? book.getTitle() : "null") +
+               '}';
     }
 }
