@@ -121,4 +121,20 @@ public class FileResponse {
         long thirtyDaysInMillis = 30L * 24 * 60 * 60 * 1000;
         return System.currentTimeMillis() - uploadDate.getTime() > thirtyDaysInMillis;
     }
+
+    public String getFileName() {
+        return fileName;
+    }
+
+    public String getFileDownloadUri() {
+        return fileDownloadUri;
+    }
+
+    public String getFileType() {
+        return fileType;
+    }
+
+    public long getSize() {
+        return size;
+    }
 }

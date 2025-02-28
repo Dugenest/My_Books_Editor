@@ -29,10 +29,19 @@ public class AdministratorService {
     }
 
     public Administrator updateAdministrator(Administrator administrator) {
+        if (administrator.getId() == null) {
+            throw new IllegalArgumentException("L'ID ne peut pas être nul");
+        }
+
         if (administratorRepository.existsById(administrator.getId())) {
             return administratorRepository.save(administrator);
         }
+
         throw new RuntimeException("Administrateur non trouvé avec l'ID : " + administrator.getId());
+    }
+    
+    public boolean existsById(Long id) {
+        return administratorRepository.existsById(id);
     }
 
     public void deleteAdministrator(Long id) {

@@ -1,13 +1,16 @@
 package com.afci.service;
 
+import com.afci.data.Book;
 import com.afci.data.Editor;
 import com.afci.data.EditorRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 
 @Service
 @Transactional
@@ -43,9 +46,9 @@ public class EditorService {
         return editorRepository.findByCompanyNameContainingIgnoreCase(companyName);
     }
 
-	public Object getBooksByEditor(Long id) {
-		// TODO Auto-generated method stub
-		return null;
-	}
+	public Set<Book> getBooksByEditor(Long id) {
+        Optional<Editor> editor = editorRepository.findById(id);
+        return editor.map(Editor::getBooks).orElse(Collections.emptySet());
+    }
 
 }

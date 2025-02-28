@@ -41,11 +41,12 @@ public class AdministratorController {
 
     @Operation(summary = "Get administrator by ID")
     @GetMapping("/{id}")
-    public ResponseEntity<Optional<Administrator>> getAdministratorById(
-        @Parameter(description = "Administrator ID") @PathVariable Long id
-    ) {
-        return ResponseEntity.ok(administratorService.getAdministratorById(id));
+    public ResponseEntity<Administrator> getAdministratorById(@PathVariable Long id) {
+        Optional<Administrator> administratorOpt = administratorService.getAdministratorById(id);
+        return administratorOpt.map(ResponseEntity::ok)
+                .orElseGet(() -> ResponseEntity.notFound().build());
     }
+
 
     @Operation(summary = "Create administrator")
     @PostMapping

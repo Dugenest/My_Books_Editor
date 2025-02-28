@@ -2,6 +2,7 @@ package com.afci.controller;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -17,6 +18,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.afci.data.Editor;
+import com.afci.data.Book;
 import com.afci.service.EditorService;
 
 import io.swagger.v3.oas.annotations.Operation;
@@ -50,7 +52,7 @@ public class EditorController {
 
     @Operation(summary = "Get books by editor")
     @GetMapping("/{id}/books")
-    public ResponseEntity<Object> getBooksByEditor(
+    public ResponseEntity<Set<Book>> getBooksByEditor(
         @Parameter(description = "Editor ID") @PathVariable Long id
     ) {
         return ResponseEntity.ok(editorService.getBooksByEditor(id));
