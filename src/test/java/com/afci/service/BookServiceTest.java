@@ -1,13 +1,18 @@
 package com.afci.service;
 
 import com.afci.data.Book;
-import com.afci.data.BookRepository;
+import com.afci.repository.BookRepository;
+
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 
 import java.util.Arrays;
 import java.util.List;
@@ -39,18 +44,19 @@ class BookServiceTest {
     void getAllBooks_shouldReturnAllBooks() {
         // Arrange
         List<Book> expectedBooks = Arrays.asList(
-            testBook,
-            new Book("Test Book 2", "0987654321", "Test Detail 2", 19.99)
-        );
-        when(bookRepository.findAll()).thenReturn(expectedBooks);
+                testBook,
+                new Book("Test Book 2", "0987654321", "Test Detail 2", 19.99));
+        Pageable pageable = PageRequest.of(0, 10);
+        Page<Book> expectedPage = new PageImpl<>(expectedBooks);
+        when(bookRepository.findAll(pageable)).thenReturn(expectedPage);
 
         // Act
-        List<Book> actualBooks = bookService.getAllBooks();
+        Page<Book> actualPage = bookService.getAllBooks(pageable);
 
         // Assert
-        assertThat(actualBooks).hasSize(2);
-        assertThat(actualBooks).isEqualTo(expectedBooks);
-        verify(bookRepository).findAll();
+        assertThat(actualPage.getContent()).hasSize(2);
+        assertThat(actualPage.getContent()).isEqualTo(expectedBooks);
+        verify(bookRepository).findAll(pageable);
     }
 
     @Test
@@ -120,8 +126,8 @@ class BookServiceTest {
 
         // Act & Assert
         assertThatThrownBy(() -> bookService.updateBook(nonExistentBook))
-            .isInstanceOf(RuntimeException.class)
-            .hasMessageContaining("Livre non trouvé");
+                .isInstanceOf(RuntimeException.class)
+                .hasMessageContaining("Livre non trouvé");
         verify(bookRepository).existsById(1L);
         verify(bookRepository, never()).save(any(Book.class));
     }
@@ -132,7 +138,7 @@ class BookServiceTest {
         String searchTitle = "Test";
         List<Book> expectedBooks = Arrays.asList(testBook);
         when(bookRepository.findByTitleContainingIgnoreCase(searchTitle))
-            .thenReturn(expectedBooks);
+                .thenReturn(expectedBooks);
 
         // Act
         List<Book> foundBooks = bookService.findBooksByTitle(searchTitle);
@@ -165,7 +171,7 @@ class BookServiceTest {
         String firstName = "John";
         List<Book> expectedBooks = Arrays.asList(testBook);
         when(bookRepository.findByAuthor_LastNameContainingIgnoreCaseOrAuthor_FirstNameContainingIgnoreCase(
-            lastName, firstName)).thenReturn(expectedBooks);
+                lastName, firstName)).thenReturn(expectedBooks);
 
         // Act
         List<Book> foundBooks = bookService.findByAuthorName(lastName, firstName);
@@ -173,8 +179,8 @@ class BookServiceTest {
         // Assert
         assertThat(foundBooks).hasSize(1);
         verify(bookRepository)
-            .findByAuthor_LastNameContainingIgnoreCaseOrAuthor_FirstNameContainingIgnoreCase(
-                lastName, firstName);
+                .findByAuthor_LastNameContainingIgnoreCaseOrAuthor_FirstNameContainingIgnoreCase(
+                        lastName, firstName);
     }
 
     @Test

@@ -26,7 +26,6 @@ import jakarta.validation.Valid;
 
 @RestController
 @RequestMapping("/api/administrators")
-@CrossOrigin(origins = "*")
 @Tag(name = "Administrator Management", description = "Administrator operations")
 public class AdministratorController {
 

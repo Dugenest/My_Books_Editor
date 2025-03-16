@@ -8,8 +8,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.afci.data.Order;
-import com.afci.data.OrderRepository;
 import com.afci.data.OrderStatus;
+import com.afci.repository.OrderRepository;
 
 @Service
 @Transactional

@@ -1,7 +1,8 @@
 package com.afci.service;
 
 import com.afci.data.Administrator;
-import com.afci.data.AdministratorRepository;
+import com.afci.repository.AdministratorRepository;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;

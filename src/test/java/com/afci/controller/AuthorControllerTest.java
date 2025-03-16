@@ -16,6 +16,10 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
 
 import com.afci.data.Author;
@@ -32,49 +36,52 @@ public class AuthorControllerTest {
 
     @Test
     void testGetAllAuthors() {
-        List<Author> authors = Arrays.asList(new Author("user123", "password", "email@test.com", "Doe", "John", "French"),
-                                             new Author("user456", "password", "email2@test.com", "Smith", "Jane", "American"));
-        when(authorService.getAllAuthors()).thenReturn(authors);
+        List<Author> authors = Arrays.asList(
+                new Author("user123", "password", "email@test.com", "Doe", "John", "French"),
+                new Author("user456", "password", "email2@test.com", "Smith", "Jane", "American"));
+        Pageable pageable = PageRequest.of(0, 10);
+        Page<Author> authorPage = new PageImpl<>(authors);
+        when(authorService.getAllAuthors(pageable)).thenReturn(authorPage);
 
-        ResponseEntity<List<Author>> response = authorController.getAllAuthors();
+        ResponseEntity<Page<Author>> response = authorController.getAllAuthors(pageable);
         assertNotNull(response.getBody());
-        assertEquals(2, response.getBody().size());
+        assertEquals(2, response.getBody().getContent().size());
     }
 
     @SuppressWarnings("null")
-	@Test
+    @Test
     void testGetAuthorById() {
         Author author = new Author("user123", "password", "email@test.com", "Doe", "John", "French");
         when(authorService.getAuthorById(1L)).thenReturn(Optional.of(author));
 
         ResponseEntity<Optional<Author>> response = authorController.getAuthorById(1L);
         assertTrue(response.getBody().isPresent());
-        assertEquals("John", response.getBody().get().getAuthorFirstname());
+        assertEquals("John", response.getBody().get().getFirstName());
     }
 
     @SuppressWarnings("null")
-	@Test
+    @Test
     void testCreateAuthor() {
         Author author = new Author("user123", "password", "email@test.com", "Doe", "John", "French");
         when(authorService.createAuthor(any())).thenReturn(author);
 
         ResponseEntity<Author> response = authorController.createAuthor(author);
         assertNotNull(response.getBody());
-        assertEquals("John", response.getBody().getAuthorFirstname());
+        assertEquals("John", response.getBody().getFirstName());
     }
 
     @SuppressWarnings("null")
-	@Test
+    @Test
     void testUpdateAuthor() {
         Author author = new Author("user123", "password", "email@test.com", "Doe", "John", "French");
         when(authorService.updateAuthor(any())).thenReturn(author);
 
         ResponseEntity<Author> response = authorController.updateAuthor(1L, author);
-        assertEquals("Doe", response.getBody().getAuthorLastname());
+        assertEquals("Doe", response.getBody().getLastName());
     }
 
     @SuppressWarnings("deprecation")
-	@Test
+    @Test
     void testDeleteAuthor() {
         doNothing().when(authorService).deleteAuthor(1L);
 

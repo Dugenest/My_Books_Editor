@@ -16,14 +16,8 @@ public class Editor implements Serializable {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @NotBlank(message = "Le nom est obligatoire")
-    @Column(nullable = false)
-    private String name;
-
-    private String address;
-    private String phone;
-    private String email;
-    private String companyName;
+    @Column(name = "company_id")
+    private Long companyId;
 
     @OneToMany(mappedBy = "editor", cascade = CascadeType.ALL, orphanRemoval = true)
     private Set<Book> books = new HashSet<>();
@@ -31,32 +25,13 @@ public class Editor implements Serializable {
     // Constructeurs
     public Editor() {}
 
-    public Editor(String name, String address, String phone, String email, String companyName) {
-        this.name = name;
-        this.address = address;
-        this.phone = phone;
-        this.email = email;
-        this.companyName = companyName;
+    public Editor(Long companyId) {
+        this.companyId = companyId;
     }
 
     // Getters et Setters
     public Long getId() { return id; }
     public void setId(Long id) { this.id = id; }
-
-    public String getName() { return name; }
-    public void setName(String name) { this.name = name; }
-
-    public String getAddress() { return address; }
-    public void setAddress(String address) { this.address = address; }
-
-    public String getPhone() { return phone; }
-    public void setPhone(String phone) { this.phone = phone; }
-
-    public String getEmail() { return email; }
-    public void setEmail(String email) { this.email = email; }
-
-    public String getCompanyName() { return companyName; }
-    public void setCompanyName(String companyName) { this.companyName = companyName; }
 
     public Set<Book> getBooks() { return books; }
     public void setBooks(Set<Book> books) {
@@ -65,6 +40,9 @@ public class Editor implements Serializable {
             books.forEach(book -> book.setEditor(this));
         }
     }
+
+    public Long getCompanyId() { return companyId; }
+    public void setCompanyId(Long companyId) { this.companyId = companyId; }
 
     // Méthodes utilitaires
     public void addBook(Book book) {
@@ -100,8 +78,7 @@ public class Editor implements Serializable {
     public String toString() {
         return "Editor{" +
                "id=" + id +
-               ", name='" + name + '\'' +
-               ", email='" + email + '\'' +
+               ", companyId=" + companyId +
                ", books=" + (books != null ? books.size() : 0) +
                '}';
     }

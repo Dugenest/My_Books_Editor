@@ -10,8 +10,8 @@ import org.springframework.transaction.annotation.Transactional;
 import com.afci.data.Customer;
 import com.afci.data.Order;
 import com.afci.data.Payment;
-import com.afci.data.PaymentRepository;
 import com.afci.data.PaymentStatus;
+import com.afci.repository.PaymentRepository;
 
 @Service
 @Transactional

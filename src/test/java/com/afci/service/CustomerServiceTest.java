@@ -16,7 +16,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import com.afci.data.Customer;
-import com.afci.data.CustomerRepository;
+import com.afci.repository.CustomerRepository;
 
 @ExtendWith(MockitoExtension.class)
 public class CustomerServiceTest {

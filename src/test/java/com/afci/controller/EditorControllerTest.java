@@ -38,8 +38,7 @@ public class EditorControllerTest {
     void setUp() {
         editor = new Editor();
         editor.setId(1L);
-        editor.setCompanyName("Test Publisher");
-        editor.setAddress("123 Publishing Street");
+        editor.setCompanyId(1L);
     }
 
     @Test
@@ -64,6 +63,7 @@ public class EditorControllerTest {
         assertTrue(response.getBody().isPresent());
     }
 
+    @SuppressWarnings("null")
     @Test
     void createEditor_ShouldReturnCreatedEditor() {
         when(editorService.createEditor(any(Editor.class))).thenReturn(editor);
@@ -72,7 +72,7 @@ public class EditorControllerTest {
 
         assertEquals(HttpStatus.CREATED, response.getStatusCode());
         assertNotNull(response.getBody());
-        assertEquals(editor.getCompanyName(), response.getBody().getCompanyName());
+        assertEquals(editor.getCompanyId(), response.getBody().getCompanyId());
     }
 
     @Test
@@ -83,7 +83,7 @@ public class EditorControllerTest {
 
         assertEquals(HttpStatus.OK, response.getStatusCode());
         assertNotNull(response.getBody());
-        assertEquals(editor.getCompanyName(), response.getBody().getCompanyName());
+        assertEquals(editor.getCompanyId(), response.getBody().getCompanyId());
     }
 
     @Test
@@ -105,4 +105,4 @@ public class EditorControllerTest {
         assertEquals(HttpStatus.OK, response.getStatusCode());
         assertNotNull(response.getBody());
     }
-} 
+}

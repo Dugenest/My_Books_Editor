@@ -71,6 +71,9 @@ public class FileResponse {
     private String thumbnailPath;
 
     // Constructeur utilisé pour la réponse API basique
+    public FileResponse(){
+    }
+    
     public FileResponse(String fileName, String fileDownloadUri, String fileType, long size) {
         this.fileName = fileName;
         this.fileDownloadUri = fileDownloadUri;

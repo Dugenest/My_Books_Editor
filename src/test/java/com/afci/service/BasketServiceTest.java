@@ -16,8 +16,8 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import com.afci.data.Basket;
-import com.afci.data.BasketRepository;
 import com.afci.data.Book;
+import com.afci.repository.BasketRepository;
 
 @ExtendWith(MockitoExtension.class)
 public class BasketServiceTest {

@@ -1,8 +1,11 @@
 package com.afci.service;
 
 import com.afci.data.Author;
-import com.afci.data.AuthorRepository;
+import com.afci.repository.AuthorRepository;
+
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -18,6 +21,10 @@ public class AuthorService {
 
     public List<Author> getAllAuthors() {
         return authorRepository.findAll();
+    }
+    
+    public Page<Author> getAllAuthors(Pageable pageable) {
+        return authorRepository.findAll(pageable);
     }
 
     public Optional<Author> getAuthorById(Long id) {

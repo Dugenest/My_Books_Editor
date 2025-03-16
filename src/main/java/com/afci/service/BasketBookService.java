@@ -8,13 +8,14 @@ import org.springframework.stereotype.Service;
 
 import com.afci.data.Basket;
 import com.afci.data.BasketBook;
-import com.afci.data.BasketBookRepository;
-import com.afci.data.BasketRepository;
 import com.afci.data.Book;
-import com.afci.data.BookRepository;
+import com.afci.repository.BasketBookRepository;
+import com.afci.repository.BasketRepository;
+import com.afci.repository.BookRepository;
 
 @Service
 public class BasketBookService {
+
     @Autowired
     private BasketBookRepository basketBookRepository;
     @Autowired
@@ -75,5 +76,9 @@ public class BasketBookService {
     public void clearBasket(Long basketId) {
         List<BasketBook> basketBooks = basketBookRepository.findByBasketId(basketId);
         basketBookRepository.deleteAll(basketBooks);
+    }
+
+    public List<BasketBook> getBasketBooksByBasketId(Long basketId) {
+        return basketBookRepository.findByBasketId(basketId);
     }
 }

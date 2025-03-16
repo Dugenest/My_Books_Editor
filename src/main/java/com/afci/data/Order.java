@@ -10,6 +10,7 @@ import java.util.Set;
 
 @Entity
 @Table(name = "orders")
+@Inheritance(strategy = InheritanceType.JOINED)  
 public class Order implements Serializable {
 
     private static final long serialVersionUID = 1L;
@@ -168,5 +169,4 @@ public class Order implements Serializable {
 		
 	}
 
-	
 }

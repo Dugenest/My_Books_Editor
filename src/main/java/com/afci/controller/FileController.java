@@ -27,7 +27,6 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/api/files")
-@CrossOrigin(origins = "*")
 @Tag(name = "File Management", description = "File upload and download operations")
 public class FileController {
 

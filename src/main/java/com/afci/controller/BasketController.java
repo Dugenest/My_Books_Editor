@@ -10,21 +10,21 @@ import io.swagger.v3.oas.annotations.Parameter;
 
 @RestController
 @RequestMapping("/api/basket")
-@CrossOrigin(origins = "*")
 public class BasketController {
 
     @Autowired
-    private BasketService basketService;  // Injection du service BasketService
+    private BasketService basketService;
 
-    // Méthode pour créer un panier
     @Operation(summary = "Create a new basket")
     @PostMapping("/create")
-    public ResponseEntity<Basket> createBasket(@RequestBody Basket basket) {
-        Basket createdBasket = basketService.createBasket(basket); // Appel au service pour créer un panier
+    public ResponseEntity<Basket> createBasket(
+        @io.swagger.v3.oas.annotations.parameters.RequestBody(description = "Basket details")
+        @RequestBody Basket basket  // Maintenant utilise l'annotation Spring
+    ) {
+        Basket createdBasket = basketService.createBasket(basket);
         return ResponseEntity.ok(createdBasket);
     }
 
-    // Méthode pour récupérer un panier par ID
     @Operation(summary = "Get basket by ID")
     @GetMapping("/{id}")
     public ResponseEntity<Basket> getBasketById(@PathVariable Long id) {
@@ -33,22 +33,21 @@ public class BasketController {
                 .orElseGet(() -> ResponseEntity.notFound().build());
     }
 
-    // Méthode pour ajouter un article au panier
     @Operation(summary = "Add book to basket")
     @PostMapping("/add/{basketId}")
     public ResponseEntity<Basket> addBookToBasket(
         @Parameter(description = "Basket ID") @PathVariable Long basketId,
-        @RequestBody Basket basket
+        @io.swagger.v3.oas.annotations.parameters.RequestBody(description = "Basket with books")
+        @RequestBody Basket basket  // Maintenant utilise l'annotation Spring
     ) {
         Basket updatedBasket = basketService.addToBasket(basketId, basket);
         return ResponseEntity.ok(updatedBasket);
     }
 
-    // Méthode pour supprimer un panier
     @Operation(summary = "Delete basket")
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteBasket(@PathVariable Long id) {
-        basketService.deleteBasket(id);  // Appel du service pour supprimer le panier
+        basketService.deleteBasket(id);
         return ResponseEntity.ok().build();
     }
 }

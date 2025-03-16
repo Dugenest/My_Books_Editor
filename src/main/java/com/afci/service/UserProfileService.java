@@ -1,7 +1,8 @@
 package com.afci.service;
 
 import com.afci.data.UserProfile;
-import com.afci.data.UserProfileRepository;
+import com.afci.repository.UserProfileRepository;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -53,14 +54,9 @@ public class UserProfileService {
         Optional<UserProfile> optionalProfile = userProfileRepository.findById(userId);
         if (optionalProfile.isPresent()) {
             UserProfile userProfile = optionalProfile.get();
-            try {
-                // Traitement de la photo (par exemple, stockage sur le serveur)
-                // Ici, juste un exemple de mise à jour
-                userProfile.setProfilePicture(picture.getBytes());
-                return userProfileRepository.save(userProfile);
-            } catch (IOException e) {
-                throw new RuntimeException("Erreur lors du téléchargement de l'image.", e);
-            }
+            // Ne plus stocker l'image dans profilePicture
+            // Stocker plutôt une référence au fichier ou utiliser un service externe
+            return userProfileRepository.save(userProfile);
         } else {
             throw new RuntimeException("Utilisateur non trouvé avec ID: " + userId);
         }

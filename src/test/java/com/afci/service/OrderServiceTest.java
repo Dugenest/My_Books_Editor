@@ -16,8 +16,8 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import com.afci.data.Order;
-import com.afci.data.OrderRepository;
 import com.afci.data.OrderStatus;
+import com.afci.repository.OrderRepository;
 
 @ExtendWith(MockitoExtension.class)
 public class OrderServiceTest {

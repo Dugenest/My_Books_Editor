@@ -19,7 +19,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 
 import com.afci.data.Book;
 import com.afci.data.Editor;
-import com.afci.data.EditorRepository;
+import com.afci.repository.EditorRepository;
 
 @ExtendWith(MockitoExtension.class)
 public class EditorServiceTest {
@@ -36,8 +36,7 @@ public class EditorServiceTest {
     void setUp() {
         editor = new Editor();
         editor.setId(1L);
-        editor.setCompanyName("Test Publisher");
-        editor.setAddress("123 Publishing Street");
+        editor.setCompanyId(1L);
     }
 
     @Test
@@ -59,7 +58,7 @@ public class EditorServiceTest {
         Optional<Editor> result = editorService.getEditorById(1L);
 
         assertTrue(result.isPresent());
-        assertEquals(editor.getCompanyName(), result.get().getCompanyName());
+        assertEquals(editor.getCompanyId(), result.get().getCompanyId());
     }
 
     @Test
@@ -69,7 +68,7 @@ public class EditorServiceTest {
         Editor result = editorService.createEditor(editor);
 
         assertNotNull(result);
-        assertEquals(editor.getCompanyName(), result.getCompanyName());
+        assertEquals(editor.getCompanyId(), result.getCompanyId());
     }
 
     @Test
@@ -80,7 +79,7 @@ public class EditorServiceTest {
         Editor result = editorService.updateEditor(editor);
 
         assertNotNull(result);
-        assertEquals(editor.getCompanyName(), result.getCompanyName());
+        assertEquals(editor.getCompanyId(), result.getCompanyId());
     }
 
     @Test
@@ -102,13 +101,13 @@ public class EditorServiceTest {
     @Test
     void findByCompanyName_ShouldReturnEditors() {
         List<Editor> editors = Arrays.asList(editor);
-        when(editorRepository.findByCompanyNameContainingIgnoreCase("Test")).thenReturn(editors);
+        when(editorRepository.findAll()).thenReturn(editors);
 
         List<Editor> result = editorService.findByCompanyName("Test");
 
         assertNotNull(result);
         assertEquals(1, result.size());
-        assertEquals("Test Publisher", result.get(0).getCompanyName());
+        assertEquals(1L, result.get(0).getCompanyId());
     }
 
     @Test

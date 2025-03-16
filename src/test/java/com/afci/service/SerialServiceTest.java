@@ -16,7 +16,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import com.afci.data.Serial;
-import com.afci.data.SerialRepository;
+import com.afci.repository.SerialRepository;
 
 @ExtendWith(MockitoExtension.class)
 public class SerialServiceTest {

@@ -1,6 +1,9 @@
-package com.afci.data;
+package com.afci.repository;
 
 import org.springframework.data.jpa.repository.JpaRepository;
+
+import com.afci.data.Administrator;
+
 import java.util.List;
 import java.util.Optional;
 

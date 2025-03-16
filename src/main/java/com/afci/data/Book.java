@@ -4,6 +4,7 @@ import com.fasterxml.jackson.annotation.JsonFormat;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.*;
 import java.io.Serializable;
+import java.time.LocalDate;
 import java.util.Date;
 import java.util.HashSet;
 import java.util.Set;
@@ -21,21 +22,20 @@ public class Book implements Serializable {
     @NotBlank(message = "Le titre est obligatoire")
     @Column(nullable = false)
     private String title;
-    
+
     @Column(unique = true)
-    @Pattern(regexp = "^(?:ISBN(?:-1[03])?:? )?(?=[0-9X]{10}$|(?=(?:[0-9]+[- ]){3})[- 0-9X]{13}$|97[89][0-9]{10}$|(?=(?:[0-9]+[- ]){4})[- 0-9]{17}$)(?:97[89][- ])?[0-9]{1,5}[- ]?[0-9]+[- ]?[0-9]+[- ]?[0-9X]$",
-            message = "Format ISBN invalide")
+    @Pattern(regexp = "^(?:ISBN(?:-1[03])?:? )?(?=[0-9X]{10}$|(?=(?:[0-9]+[- ]){3})[- 0-9X]{13}$|97[89][0-9]{10}$|(?=(?:[0-9]+[- ]){4})[- 0-9]{17}$)(?:97[89][- ])?[0-9]{1,5}[- ]?[0-9]+[- ]?[0-9]+[- ]?[0-9X]$", message = "Format ISBN invalide")
     private String ISBN;
-    
+
     @Column(length = 2000)
     private String detail;
-    
+
     private String picture;
-    
+
     @NotNull(message = "Le prix est obligatoire")
     @DecimalMin(value = "0.0", message = "Le prix doit être positif")
     private Double price;
-    
+
     @Min(value = 0, message = "Le stock ne peut pas être négatif")
     private Integer stock;
 
@@ -45,9 +45,9 @@ public class Book implements Serializable {
     private Date rewardDate;
 
     @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd")
-    @Column(name = "publication_date")
+    @Column(name = "publish_date")
     @Temporal(TemporalType.DATE)
-    private Date publicationDate;
+    private LocalDate publishDate;
 
     @ManyToOne
     @JoinColumn(name = "author_id")
@@ -60,17 +60,13 @@ public class Book implements Serializable {
     @ManyToOne
     @JoinColumn(name = "administrator_id")
     private Administrator administrator;
-    
+
     @ManyToOne
     @JoinColumn(name = "user_id")
     private User user;
 
     @ManyToMany
-    @JoinTable(
-        name = "book_category",
-        joinColumns = @JoinColumn(name = "book_id"),
-        inverseJoinColumns = @JoinColumn(name = "category_id")
-    )
+    @JoinTable(name = "book_category", joinColumns = @JoinColumn(name = "book_id"), inverseJoinColumns = @JoinColumn(name = "category_id"))
     private Set<Category> categories = new HashSet<>();
 
     @ManyToMany(mappedBy = "books")
@@ -78,11 +74,10 @@ public class Book implements Serializable {
 
     @ManyToMany(mappedBy = "books")
     private Set<Basket> baskets = new HashSet<>();
-    
+
     @ManyToOne
     @JoinColumn(name = "category_id") // Adjust column name if needed
     private Category category;
-
 
     // Constructeurs
     public Book() {
@@ -90,43 +85,91 @@ public class Book implements Serializable {
         this.price = 0.0;
     }
 
-    public Book(String title, String ISBN, String detail, Double price) {
-        this();
+    public Book(String title, String ISBN, String detail, double price) {
         this.title = title;
         this.ISBN = ISBN;
         this.detail = detail;
         this.price = price;
+        this.stock = 0; // Valeur par défaut
     }
 
     // Getters et Setters
-    public Long getId() { return id; }
-    public void setId(Long id) { this.id = id; }
+    public Long getId() {
+        return id;
+    }
 
-    public String getTitle() { return title; }
-    public void setTitle(String title) { this.title = title; }
+    public void setId(Long id) {
+        this.id = id;
+    }
 
-    public String getISBN() { return ISBN; }
-    public void setISBN(String ISBN) { this.ISBN = ISBN; }
+    public String getTitle() {
+        return title;
+    }
 
-    public String getDetail() { return detail; }
-    public void setDetail(String detail) { this.detail = detail; }
+    public void setTitle(String title) {
+        this.title = title;
+    }
 
-    public String getPicture() { return picture; }
-    public void setPicture(String picture) { this.picture = picture; }
+    public String getISBN() {
+        return ISBN;
+    }
 
-    public Double getPrice() { return price; }
-    public void setPrice(Double price) { this.price = price; }
+    public void setISBN(String ISBN) {
+        this.ISBN = ISBN;
+    }
 
-    public Integer getStock() { return stock; }
-    public void setStock(Integer stock) { this.stock = stock; }
+    public String getDetail() {
+        return detail;
+    }
 
-    public Date getRewardDate() { return rewardDate; }
-    public void setRewardDate(Date rewardDate) { this.rewardDate = rewardDate; }
+    public void setDetail(String detail) {
+        this.detail = detail;
+    }
 
-    public Date getPublicationDate() { return publicationDate; }
-    public void setPublicationDate(Date publicationDate) { this.publicationDate = publicationDate; }
+    public String getPicture() {
+        return picture;
+    }
 
-    public Author getAuthor() { return author; }
+    public void setPicture(String picture) {
+        this.picture = picture;
+    }
+
+    public Double getPrice() {
+        return price;
+    }
+
+    public void setPrice(Double price) {
+        this.price = price;
+    }
+
+    public Integer getStock() {
+        return stock;
+    }
+
+    public void setStock(Integer stock) {
+        this.stock = stock;
+    }
+
+    public Date getRewardDate() {
+        return rewardDate;
+    }
+
+    public void setRewardDate(Date rewardDate) {
+        this.rewardDate = rewardDate;
+    }
+
+    public LocalDate getPublishDate() {
+        return publishDate;
+    }
+
+    public void setPublishDate(LocalDate publishDate) {
+        this.publishDate = publishDate;
+    }
+
+    public Author getAuthor() {
+        return author;
+    }
+
     public void setAuthor(Author author) {
         this.author = author;
         if (author != null && !author.getAuthoredBooks().contains(this)) {
@@ -134,7 +177,10 @@ public class Book implements Serializable {
         }
     }
 
-    public Editor getEditor() { return editor; }
+    public Editor getEditor() {
+        return editor;
+    }
+
     public void setEditor(Editor editor) {
         this.editor = editor;
         if (editor != null && !editor.getBooks().contains(this)) {
@@ -142,7 +188,10 @@ public class Book implements Serializable {
         }
     }
 
-    public Administrator getAdministrator() { return administrator; }
+    public Administrator getAdministrator() {
+        return administrator;
+    }
+
     public void setAdministrator(Administrator administrator) {
         this.administrator = administrator;
         if (administrator != null && !administrator.getManagedBooks().contains(this)) {
@@ -150,17 +199,37 @@ public class Book implements Serializable {
         }
     }
 
-    public Set<Category> getCategories() { return categories; }
-    public void setCategories(Set<Category> categories) { this.categories = categories; }
+    public Set<Category> getCategories() {
+        return categories;
+    }
 
-    public Set<Order> getOrders() { return orders; }
-    public void setOrders(Set<Order> orders) { this.orders = orders; }
+    public void setCategories(Set<Category> categories) {
+        this.categories = categories;
+    }
 
-    public Set<Basket> getBaskets() { return baskets; }
-    public void setBaskets(Set<Basket> baskets) { this.baskets = baskets; }
-    
-    public User getUser() { return user; }
-    public void setUser(User user) { this.user = user; }
+    public Set<Order> getOrders() {
+        return orders;
+    }
+
+    public void setOrders(Set<Order> orders) {
+        this.orders = orders;
+    }
+
+    public Set<Basket> getBaskets() {
+        return baskets;
+    }
+
+    public void setBaskets(Set<Basket> baskets) {
+        this.baskets = baskets;
+    }
+
+    public User getUser() {
+        return user;
+    }
+
+    public void setUser(User user) {
+        this.user = user;
+    }
 
     // Méthodes métier
     public boolean isInStock() {
@@ -176,7 +245,8 @@ public class Book implements Serializable {
     }
 
     public void increaseStock(int quantity) {
-        if (stock == null) stock = 0;
+        if (stock == null)
+            stock = 0;
         stock += quantity;
     }
 
@@ -197,8 +267,10 @@ public class Book implements Serializable {
 
     @Override
     public boolean equals(Object o) {
-        if (this == o) return true;
-        if (!(o instanceof Book)) return false;
+        if (this == o)
+            return true;
+        if (!(o instanceof Book))
+            return false;
         Book book = (Book) o;
         return id != null && id.equals(book.getId());
     }
@@ -211,14 +283,12 @@ public class Book implements Serializable {
     @Override
     public String toString() {
         return "Book{" +
-               "id=" + id +
-               ", title='" + title + '\'' +
-               ", ISBN='" + ISBN + '\'' +
-               ", price=" + price +
-               ", stock=" + stock +
-               ", author=" + (author != null ? author.getAuthorLastname() + " " + author.getAuthorFirstname() : "null") +
-               ", editor=" + (editor != null ? editor.getName() : "null") +
-               ", categories=" + categories.size() +
-               '}';
+                "id=" + id +
+                ", title='" + title + '\'' +
+                ", ISBN='" + ISBN + '\'' +
+                ", price=" + price +
+                ", stock=" + stock +
+                ", categories=" + categories.size() +
+                '}';
     }
 }

@@ -2,7 +2,8 @@ package com.afci.service;
 
 import com.afci.data.PasswordChangeRequest;
 import com.afci.data.User;
-import com.afci.data.UserRepository;
+import com.afci.repository.UserRepository;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 

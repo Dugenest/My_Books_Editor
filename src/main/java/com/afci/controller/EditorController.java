@@ -15,6 +15,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.afci.data.Editor;
@@ -29,7 +30,6 @@ import jakarta.validation.Valid;
 
 @RestController
 @RequestMapping("/api/editors")
-@CrossOrigin(origins = "*")
 @Tag(name = "Editor Management", description = "Editor operations")
 public class EditorController {
 
@@ -84,4 +84,10 @@ public class EditorController {
         editorService.deleteEditor(id);
         return ResponseEntity.noContent().build();
     }
+
+    // @Operation(summary = "Search editors")
+    // @GetMapping("/search")
+    // public ResponseEntity<List<Editor>> searchEditors(@RequestParam String query) {
+    //     return ResponseEntity.ok(editorService.findByCompanyId(Long.parseLong(query)));
+    // }
 }

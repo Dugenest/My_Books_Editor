@@ -16,7 +16,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 
 import com.afci.data.PasswordChangeRequest;
 import com.afci.data.User;
-import com.afci.data.UserRepository;
+import com.afci.repository.UserRepository;
 
 @ExtendWith(MockitoExtension.class)
 public class UserServiceTest {

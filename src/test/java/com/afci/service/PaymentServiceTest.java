@@ -18,8 +18,8 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import com.afci.data.Customer;
 import com.afci.data.Order;
 import com.afci.data.Payment;
-import com.afci.data.PaymentRepository;
 import com.afci.data.PaymentStatus;
+import com.afci.repository.PaymentRepository;
 
 @ExtendWith(MockitoExtension.class)
 public class PaymentServiceTest {

@@ -1,9 +1,14 @@
 package com.afci.data;
 
 import jakarta.persistence.*;
-import java.util.Date;
+import java.time.LocalDate;
 import java.util.HashSet;
 import java.util.Set;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 
 @Entity
 @Table(name = "authors")
@@ -12,12 +17,6 @@ import java.util.Set;
 public class Author extends User {
 
     private static final long serialVersionUID = 1L;
-
-    @Column(name = "author_lastname")
-    private String authorLastname;
-
-    @Column(name = "author_firstname")
-    private String authorFirstname;
     
     @Column(name = "nationality")
     private String authorNationality;
@@ -25,32 +24,31 @@ public class Author extends User {
     @Column(length = 2000)
     private String biography;
 
-    @Temporal(TemporalType.DATE)
-    private Date birthDate;
-
+    @JsonIgnore
     @OneToMany(mappedBy = "author", cascade = CascadeType.ALL)
     private Set<Book> authoredBooks = new HashSet<>();
+
+    @Column(name = "first_name")
+    private String firstName;
+
+    @Column(name = "last_name")
+    private String lastName;
+
+    @Column(name = "birth_date")
+    private LocalDate birthDate;
 
     // Constructeurs
     public Author() {}
 
     public Author(String username, String password, String email,
-                 String authorLastname, String authorFirstname, String authorNationality) {
+                 String lastName, String firstName, String authorNationality) {
         super(username, password, email);
-        this.authorLastname = authorLastname;
-        this.authorFirstname = authorFirstname;
+        this.lastName = lastName;
+        this.firstName = firstName;
         this.authorNationality = authorNationality;
     }
 
     // Getters et Setters
-    public String getAuthorLastname() { return authorLastname; }
-    public void setAuthorLastname(String authorLastname) { this.authorLastname = authorLastname; }
-
-    public String getAuthorFirstname() { return authorFirstname; }
-    public void setAuthorFirstname(String authorFirstname) { 
-        this.authorFirstname = authorFirstname; 
-    }
-
     public String getAuthorNationality() { return authorNationality; }
     public void setAuthorNationality(String authorNationality) { 
         this.authorNationality = authorNationality; 
@@ -59,9 +57,6 @@ public class Author extends User {
     public String getBiography() { return biography; }
     public void setBiography(String biography) { this.biography = biography; }
 
-    public Date getBirthDate() { return birthDate; }
-    public void setBirthDate(Date birthDate) { this.birthDate = birthDate; }
-
     public Set<Book> getAuthoredBooks() { return authoredBooks; }
     public void setAuthoredBooks(Set<Book> books) {
         this.authoredBooks = books;
@@ -69,6 +64,15 @@ public class Author extends User {
             books.forEach(book -> book.setAuthor(this));
         }
     }
+
+    public String getFirstName() { return firstName; }
+    public void setFirstName(String firstName) { this.firstName = firstName; }
+
+    public String getLastName() { return lastName; }
+    public void setLastName(String lastName) { this.lastName = lastName; }
+
+    public LocalDate getBirthDate() { return birthDate; }
+    public void setBirthDate(LocalDate birthDate) { this.birthDate = birthDate; }
 
     // Méthodes utilitaires
     public void addAuthoredBook(Book book) {
@@ -93,8 +97,8 @@ public class Author extends User {
                "id=" + getId() +
                ", username='" + getUsername() + '\'' +
                ", email='" + getEmail() + '\'' +
-               ", authorLastname='" + authorLastname + '\'' +
-               ", authorFirstname='" + authorFirstname + '\'' +
+               ", lastName='" + lastName + '\'' +
+               ", firstName='" + firstName + '\'' +
                ", authorNationality='" + authorNationality + '\'' +
                ", biography='" + (biography != null ? biography.substring(0, Math.min(biography.length(), 50)) + "..." : "null") + '\'' +
                ", birthDate=" + birthDate +

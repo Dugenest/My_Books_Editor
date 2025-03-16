@@ -1,7 +1,8 @@
 package com.afci.service;
 
 import com.afci.data.Serial;
-import com.afci.data.SerialRepository;
+import com.afci.repository.SerialRepository;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;

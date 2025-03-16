@@ -20,7 +20,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import com.afci.data.Category;
-import com.afci.data.CategoryRepository;
+import com.afci.repository.CategoryRepository;
 
 @ExtendWith(MockitoExtension.class)
 public class CategoryServiceTest {

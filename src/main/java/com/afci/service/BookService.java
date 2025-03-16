@@ -1,11 +1,17 @@
 package com.afci.service;
 
 import com.afci.data.Book;
-import com.afci.data.BookRepository;
+import com.afci.repository.BookRepository;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.data.domain.Sort;
 
+
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import java.util.List;
 import java.util.Optional;
 
@@ -18,10 +24,11 @@ public class BookService {
 
     /**
      * Récupère tous les livres de la base de données.
+     * @param pageable 
      * @return Liste de tous les livres.
      */
-    public List<Book> getAllBooks() {
-        return bookRepository.findAll();
+    public Page<Book> getAllBooks(Pageable pageable) {
+        return bookRepository.findAll(pageable);
     }
 
     /**
@@ -90,5 +97,30 @@ public class BookService {
      */
     public List<Book> findBooksByCategory(String category) {
         return bookRepository.findByCategory_Name(category);
+    }
+    
+    /**
+     * Récupère les dernières parutions de livres
+     * @param limit Le nombre de livres à récupérer
+     * @return Une liste des derniers livres publiés
+     */
+    public List<Book> getNewReleases(int limit) {
+        // Cette implémentation suppose que vous avez un champ 'publicationDate' ou similaire
+        // Si ce n'est pas le cas, vous pouvez trier par ID (en supposant que les IDs plus élevés sont plus récents)
+        Pageable pageable = PageRequest.of(0, limit, Sort.by("id").descending());
+        return bookRepository.findAll(pageable).getContent();
+    }
+    
+    /**
+     * Récupère les livres les plus populaires
+     * @param limit Le nombre de livres à récupérer
+     * @return Une liste des livres les plus populaires
+     */
+    public List<Book> getPopularBooks(int limit) {
+        // Cette implémentation est un placeholder
+        // Idéalement, vous auriez un champ comme 'numberOfSales' ou 'rating' pour trier
+        // Pour l'instant, on retourne simplement les premiers livres
+        Pageable pageable = PageRequest.of(0, limit);
+        return bookRepository.findAll(pageable).getContent();
     }
 }

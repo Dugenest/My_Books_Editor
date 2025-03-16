@@ -4,6 +4,8 @@ import java.util.List;
 import java.util.Optional;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.CrossOrigin;
@@ -26,7 +28,6 @@ import jakarta.validation.Valid;
 
 @RestController
 @RequestMapping("/api/authors")
-@CrossOrigin(origins = "*")
 @Tag(name = "Author Management", description = "APIs pour la gestion des auteurs")
 public class AuthorController {
 
@@ -35,8 +36,8 @@ public class AuthorController {
 
     @Operation(summary = "Récupérer tous les auteurs")
     @GetMapping
-    public ResponseEntity<List<Author>> getAllAuthors() {
-        return ResponseEntity.ok(authorService.getAllAuthors());
+    public ResponseEntity<Page<Author>> getAllAuthors(Pageable pageable) {
+        return ResponseEntity.ok(authorService.getAllAuthors(pageable));
     }
 
     @Operation(summary = "Récupérer un auteur par ID")

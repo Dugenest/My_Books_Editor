@@ -20,7 +20,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import com.afci.data.Author;
-import com.afci.data.AuthorRepository;
+import com.afci.repository.AuthorRepository;
 
 @ExtendWith(MockitoExtension.class)
 public class AuthorServiceTest {
@@ -54,7 +54,7 @@ public class AuthorServiceTest {
 
         Optional<Author> result = authorService.getAuthorById(1L);
         assertTrue(result.isPresent());
-        assertEquals("John", result.get().getAuthorFirstname());
+        assertEquals("John", result.get().getFirstName());
     }
 
     @Test
@@ -63,7 +63,7 @@ public class AuthorServiceTest {
 
         Author result = authorService.createAuthor(author);
         assertNotNull(result);
-        assertEquals("John", result.getAuthorFirstname());
+        assertEquals("John", result.getFirstName());
     }
 
     @Test
@@ -72,7 +72,7 @@ public class AuthorServiceTest {
         when(authorRepository.save(any())).thenReturn(author);
 
         Author result = authorService.updateAuthor(author);
-        assertEquals("Doe", result.getAuthorLastname());
+        assertEquals("Doe", result.getLastName());
     }
 
     @Test

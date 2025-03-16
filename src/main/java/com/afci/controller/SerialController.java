@@ -28,7 +28,6 @@ import jakarta.validation.Valid;
 
 @RestController
 @RequestMapping("/api/serials")
-@CrossOrigin(origins = "*")
 @Tag(name = "Serial Management", description = "Serial/Series operations")
 public class SerialController {
 

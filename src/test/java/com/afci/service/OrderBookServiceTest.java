@@ -16,11 +16,11 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import com.afci.data.Book;
-import com.afci.data.BookRepository;
 import com.afci.data.Order;
 import com.afci.data.OrderBook;
-import com.afci.data.OrderBookRepository;
-import com.afci.data.OrderRepository;
+import com.afci.repository.BookRepository;
+import com.afci.repository.OrderBookRepository;
+import com.afci.repository.OrderRepository;
 
 @ExtendWith(MockitoExtension.class)
 public class OrderBookServiceTest {

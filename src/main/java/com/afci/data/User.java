@@ -3,8 +3,11 @@ package com.afci.data;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.*;
 import java.io.Serializable;
+import java.time.LocalDateTime;
 import java.util.HashSet;
 import java.util.Set;
+
+import com.fasterxml.jackson.annotation.JsonIgnore;
 
 @Entity
 @Table(name = "users")
@@ -38,17 +41,25 @@ public class User implements Serializable {
 
     @Column(name = "last_name")
     private String lastName;
+    
+    @Column(name = "subscribed_to_newsletter")
+    private boolean subscribedToNewsletter;
 
     private String phone;
     private String address;
     private String role;
 
-    @Column(nullable = false)
-    private boolean active = true;
+    @Column(name = "registration_date")
+    private LocalDateTime registrationDate;
 
+    @Column(name = "active")
+    private boolean active = true; // Renommé le champ et gardé la valeur par défaut
+    
+    @JsonIgnore
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
     private Set<Book> books = new HashSet<>();
 
+    @JsonIgnore
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
     private Set<Order> orders = new HashSet<>();
 
@@ -79,6 +90,10 @@ public class User implements Serializable {
 
     public String getLastName() { return lastName; }
     public void setLastName(String lastName) { this.lastName = lastName; }
+    
+    public boolean isSubscribedToNewsletter() { return subscribedToNewsletter; }
+    public void setSubscribedToNewsletter(boolean subscribedToNewsletter) {
+        this.subscribedToNewsletter = subscribedToNewsletter; }
 
     public String getPhone() { return phone; }
     public void setPhone(String phone) { this.phone = phone; }
@@ -89,14 +104,17 @@ public class User implements Serializable {
     public String getRole() { return role; }
     public void setRole(String role) { this.role = role; }
 
-    public boolean isActive() { return active; }
-    public void setActive(boolean active) { this.active = active; }
+    public boolean isActive() { return active; } // Le getter suivant la convention JavaBean
+    public void setActive(boolean active) { this.active = active; } // Le setter correspondant
+
+    public LocalDateTime getRegistrationDate() { return registrationDate; }
+    public void setRegistrationDate(LocalDateTime registrationDate) { this.registrationDate = registrationDate; }
 
     public Set<Book> getBooks() { return books; }
     public void setBooks(Set<Book> books) {
         this.books = books;
         if (books != null) {
-            books.forEach(book -> book.setUser(this));  // Utiliser setUser
+            books.forEach(book -> book.setUser(this));
         }
     }
 
@@ -104,7 +122,7 @@ public class User implements Serializable {
     public void setOrders(Set<Order> orders) {
         this.orders = orders;
         if (orders != null) {
-            orders.forEach(order -> order.setUser(this));  // Utiliser setUser
+            orders.forEach(order -> order.setUser(this));
         }
     }
 
@@ -112,14 +130,14 @@ public class User implements Serializable {
     public void addBook(Book book) {
         if (book != null) {
             books.add(book);
-            book.setUser(this);  // Utiliser setUser
+            book.setUser(this);
         }
     }
 
     public void removeBook(Book book) {
         if (book != null) {
             books.remove(book);
-            if (book.getUser() == this) {  // Utiliser getUser
+            if (book.getUser() == this) {
                 book.setUser(null);
             }
         }
@@ -129,14 +147,14 @@ public class User implements Serializable {
     public void addOrder(Order order) {
         if (order != null) {
             orders.add(order);
-            order.setUser(this);  // Utiliser setUser
+            order.setUser(this);
         }
     }
 
     public void removeOrder(Order order) {
         if (order != null) {
             orders.remove(order);
-            if (order.getUser() == this) {  // Utiliser getUser
+            if (order.getUser() == this) {
                 order.setUser(null);
             }
         }

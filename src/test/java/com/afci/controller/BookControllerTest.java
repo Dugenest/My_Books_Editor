@@ -7,6 +7,10 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
@@ -40,15 +44,20 @@ class BookControllerTest {
         // Arrange
         Book book1 = new Book("Test Book 1", "1234567890", "Detail 1", 29.99);
         Book book2 = new Book("Test Book 2", "0987654321", "Detail 2", 19.99);
-        when(bookService.getAllBooks()).thenReturn(Arrays.asList(book1, book2));
+        
+        // Utiliser la pagination correctement
+        Pageable pageable = PageRequest.of(0, 10);
+        Page<Book> bookPage = new PageImpl<>(Arrays.asList(book1, book2));
+        
+        when(bookService.getAllBooks(any(Pageable.class))).thenReturn(bookPage);
 
         // Act & Assert
         mockMvc.perform(get("/api/books"))
                 .andExpect(status().isOk())
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON))
-                .andExpect(jsonPath("$.length()").value(2))
-                .andExpect(jsonPath("$[0].title").value("Test Book 1"))
-                .andExpect(jsonPath("$[1].title").value("Test Book 2"));
+                .andExpect(jsonPath("$.content.length()").value(2))
+                .andExpect(jsonPath("$.content[0].title").value("Test Book 1"))
+                .andExpect(jsonPath("$.content[1].title").value("Test Book 2"));
     }
 
     @Test
@@ -65,31 +74,31 @@ class BookControllerTest {
     }
 
     @Test
-void createBook_withAllRequiredFields_shouldReturnCreatedBook() throws Exception {
-    // Créez une instance complète avec TOUS les champs obligatoires
-    Book bookToCreate = new Book("Complete Book Title", "978-3-16-148410-0", "Complete details", 39.99);
-    bookToCreate.setStock(10);
-    
-    // Si d'autres associations sont obligatoires, configurez-les aussi
-    
-    Book createdBook = new Book("Complete Book Title", "978-3-16-148410-0", "Complete details", 39.99);
-    createdBook.setId(1L);
-    createdBook.setStock(10);
-    
-    when(bookService.createBook(any(Book.class))).thenReturn(createdBook);
-    
-    // Imprimez le JSON avant l'envoi
-    String requestJson = objectMapper.writeValueAsString(bookToCreate);
-    System.out.println("JSON de requête: " + requestJson);
-    
-    // Act & Assert
-    mockMvc.perform(post("/api/books")
-            .contentType(MediaType.APPLICATION_JSON)
-            .content(requestJson))
-            .andDo(print())
-            .andExpect(status().isCreated())
-            .andExpect(jsonPath("$.id").exists());
-}
+    void createBook_withAllRequiredFields_shouldReturnCreatedBook() throws Exception {
+        // Créez une instance complète avec TOUS les champs obligatoires
+        Book bookToCreate = new Book("Complete Book Title", "978-3-16-148410-0", "Complete details", 39.99);
+        bookToCreate.setStock(10);
+
+        // Si d'autres associations sont obligatoires, configurez-les aussi
+
+        Book createdBook = new Book("Complete Book Title", "978-3-16-148410-0", "Complete details", 39.99);
+        createdBook.setId(1L);
+        createdBook.setStock(10);
+
+        when(bookService.createBook(any(Book.class))).thenReturn(createdBook);
+
+        // Imprimez le JSON avant l'envoi
+        String requestJson = objectMapper.writeValueAsString(bookToCreate);
+        System.out.println("JSON de requête: " + requestJson);
+
+        // Act & Assert
+        mockMvc.perform(post("/api/books")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(requestJson))
+                .andDo(print())
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.id").exists());
+    }
 
     @Test
     void createBook_withValidData_shouldReturnCreatedBook() throws Exception {
@@ -142,10 +151,10 @@ void createBook_withAllRequiredFields_shouldReturnCreatedBook() throws Exception
         // Arrange
         Book bookToUpdate = new Book();
         bookToUpdate.setId(1L);
-        bookToUpdate.setTitle("Updated Title"); // Titre obligatoire
-        bookToUpdate.setISBN("978-3-16-148410-0"); // ISBN valide
+        bookToUpdate.setTitle("Updated Title");
+        bookToUpdate.setISBN("978-3-16-148410-0");
         bookToUpdate.setDetail("Updated Detail");
-        bookToUpdate.setPrice(49.99); // Prix positif obligatoire
+        bookToUpdate.setPrice(49.99);
         bookToUpdate.setStock(15);
 
         when(bookService.updateBook(any(Book.class))).thenReturn(bookToUpdate);
@@ -154,7 +163,7 @@ void createBook_withAllRequiredFields_shouldReturnCreatedBook() throws Exception
         mockMvc.perform(put("/api/books/1")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(bookToUpdate)))
-                .andDo(print()) // Pour voir la réponse
+                .andDo(print())
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.title").value("Updated Title"));
     }

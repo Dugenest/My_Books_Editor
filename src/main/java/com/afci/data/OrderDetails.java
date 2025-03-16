@@ -3,8 +3,8 @@ package com.afci.data;
 import jakarta.persistence.*;
 
 @Entity
-@PrimaryKeyJoinColumn(name = "order_id")
-@DiscriminatorValue("ORDER_DETAIL")
+@PrimaryKeyJoinColumn(name = "order_id") // Correct si Order est la classe parent
+@DiscriminatorValue("ORDER_DETAIL") // Utile pour la stratégie SINGLE_TABLE
 public class OrderDetails extends Order {
 
     /**

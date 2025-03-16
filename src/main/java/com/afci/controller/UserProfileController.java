@@ -15,7 +15,6 @@ import jakarta.validation.Valid;
 
 @RestController
 @RequestMapping("/api/user-profiles")
-@CrossOrigin(origins = "*")
 @Tag(name = "User Profile Management", description = "User profile operations")
 public class UserProfileController {
 

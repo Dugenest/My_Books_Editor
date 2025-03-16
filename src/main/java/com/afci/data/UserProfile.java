@@ -38,9 +38,6 @@ public class UserProfile implements Serializable {
     @Column(length = 255)
     private String address;
 
-    @Lob
-    private byte[] profilePicture;  // Stockage de la photo de profil
-
     // Getters et Setters
     public Long getId_profile() {
         return id_profile;
@@ -80,14 +77,6 @@ public class UserProfile implements Serializable {
 
     public void setAddress(String address) {
         this.address = address;
-    }
-
-    public byte[] getProfilePicture() {
-        return profilePicture;
-    }
-
-    public void setProfilePicture(byte[] profilePicture) {
-        this.profilePicture = profilePicture;
     }
 
     @Override

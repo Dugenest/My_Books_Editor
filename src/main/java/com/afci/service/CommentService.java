@@ -2,7 +2,7 @@ package com.afci.service;
 
 import com.afci.data.Book;
 import com.afci.data.Comment;
-import com.afci.data.CommentRepository;
+import com.afci.repository.CommentRepository;
 
 import jakarta.validation.Valid;
 

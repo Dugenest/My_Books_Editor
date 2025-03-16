@@ -1,7 +1,8 @@
 package com.afci.service;
 
 import com.afci.data.Category;
-import com.afci.data.CategoryRepository;
+import com.afci.repository.CategoryRepository;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;

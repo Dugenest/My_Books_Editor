@@ -25,7 +25,6 @@ import jakarta.validation.Valid;
 
 @RestController
 @RequestMapping("/api/comments")
-@CrossOrigin(origins = "*")
 @Tag(name = "Comment Management", description = "Comment operations")
 public class CommentController {
 

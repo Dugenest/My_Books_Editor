@@ -7,7 +7,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.afci.data.Basket;
-import com.afci.data.BasketRepository;
+import com.afci.repository.BasketRepository;
 
 @Service
 @Transactional

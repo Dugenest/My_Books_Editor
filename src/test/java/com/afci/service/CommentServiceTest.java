@@ -17,7 +17,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 
 import com.afci.data.Book;
 import com.afci.data.Comment;
-import com.afci.data.CommentRepository;
+import com.afci.repository.CommentRepository;
 
 @ExtendWith(MockitoExtension.class)
 public class CommentServiceTest {
