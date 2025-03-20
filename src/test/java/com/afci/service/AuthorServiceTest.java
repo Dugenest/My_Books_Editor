@@ -5,7 +5,9 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.doNothing;
+import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.when;
 
 import java.util.Arrays;
@@ -18,6 +20,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.security.crypto.password.PasswordEncoder;
 
 import com.afci.data.Author;
 import com.afci.repository.AuthorRepository;
@@ -28,6 +31,9 @@ public class AuthorServiceTest {
     @Mock
     private AuthorRepository authorRepository;
 
+    @Mock
+    private PasswordEncoder passwordEncoder;
+
     @InjectMocks
     private AuthorService authorService;
 
@@ -37,6 +43,7 @@ public class AuthorServiceTest {
     void setUp() {
         author = new Author("user123", "password", "email@test.com", "Doe", "John", "French");
         author.setId(1L);
+        lenient().when(passwordEncoder.encode(anyString())).thenReturn("encodedPassword");
     }
 
     @Test
@@ -59,7 +66,7 @@ public class AuthorServiceTest {
 
     @Test
     void testCreateAuthor() {
-        when(authorRepository.save(any())).thenReturn(author);
+        when(authorRepository.save(any(Author.class))).thenReturn(author);
 
         Author result = authorService.createAuthor(author);
         assertNotNull(result);
@@ -68,16 +75,24 @@ public class AuthorServiceTest {
 
     @Test
     void testUpdateAuthor() {
+        Author existingAuthor = new Author("user123", "password", "email@test.com", "Doe", "John", "French");
+        existingAuthor.setId(1L);
         when(authorRepository.existsById(1L)).thenReturn(true);
-        when(authorRepository.save(any())).thenReturn(author);
+        when(authorRepository.findById(1L)).thenReturn(Optional.of(existingAuthor));
+        when(authorRepository.save(any(Author.class))).thenReturn(existingAuthor);
 
-        Author result = authorService.updateAuthor(author);
-        assertEquals("Doe", result.getLastName());
+        Author updatedAuthor = new Author("user123", "newpassword", "newemail@test.com", "NewDoe", "NewJohn", "French");
+        updatedAuthor.setId(1L);
+        Author result = authorService.updateAuthor(updatedAuthor);
+        assertEquals("NewDoe", result.getLastName());
     }
 
     @Test
     void testDeleteAuthor() {
-        doNothing().when(authorRepository).deleteById(1L);
+        Author existingAuthor = new Author("user123", "password", "email@test.com", "Doe", "John", "French");
+        existingAuthor.setId(1L);
+        when(authorRepository.findById(1L)).thenReturn(Optional.of(existingAuthor));
+
         assertDoesNotThrow(() -> authorService.deleteAuthor(1L));
     }
 

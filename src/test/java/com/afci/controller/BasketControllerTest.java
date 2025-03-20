@@ -40,7 +40,7 @@ public class BasketControllerTest {
         book.setTitle("Test Book");
 
         basket = new Basket();
-        basket.setBasketId(1L);
+        basket.setId(1L);
         Set<Book> books = new HashSet<>();
         books.add(book);
         basket.setBooks(books);
@@ -55,7 +55,7 @@ public class BasketControllerTest {
         assertEquals(HttpStatus.OK, response.getStatusCode());
         Basket responseBody = response.getBody();
         assertNotNull(responseBody);
-        assertEquals(basket.getBasketId(), responseBody.getBasketId());
+        assertEquals(basket.getId(), responseBody.getId());
     }
 
     @Test
@@ -67,7 +67,7 @@ public class BasketControllerTest {
         assertEquals(HttpStatus.OK, response.getStatusCode());
         Basket responseBody = response.getBody();
         assertNotNull(responseBody);
-        assertEquals(basket.getBasketId(), responseBody.getBasketId());
+        assertEquals(basket.getId(), responseBody.getId());
     }
 
     @Test
@@ -88,7 +88,7 @@ public class BasketControllerTest {
         assertEquals(HttpStatus.OK, response.getStatusCode());
         Basket responseBody = response.getBody();
         assertNotNull(responseBody);
-        assertEquals(basket.getBasketId(), responseBody.getBasketId());
+        assertEquals(basket.getId(), responseBody.getId());
     }
 
     @Test

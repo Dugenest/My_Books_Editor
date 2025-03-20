@@ -41,7 +41,7 @@ public class BasketBookServiceTest {
     @BeforeEach
     void setUp() {
         basket = new Basket();
-        basket.setBasketId(1L);
+        basket.setId(1L);
 
         book = new Book();
         book.setId(1L);
@@ -54,20 +54,31 @@ public class BasketBookServiceTest {
     }
 
     @Test
-    void addBookToBasket_WhenExistingBook_ShouldUpdateQuantity() {
-        // Ajouter ces deux lignes pour configurer les mocks manquants
+    void addBookToBasket_ShouldAddNewBookToBasket() {
         when(basketRepository.findById(1L)).thenReturn(Optional.of(basket));
         when(bookRepository.findById(1L)).thenReturn(Optional.of(book));
-        
-        // Vos mocks existants
+        when(basketBookRepository.findByBasketIdAndBookId(1L, 1L)).thenReturn(Optional.empty());
+        when(basketBookRepository.save(any(BasketBook.class))).thenReturn(basketBook);
+
+        BasketBook result = basketBookService.addBookToBasket(1L, 1L, 2);
+
+        assertNotNull(result);
+        assertEquals(2, result.getQuantity());
+        assertEquals(basket, result.getBasket());
+        assertEquals(book, result.getBook());
+    }
+
+    @Test
+    void addBookToBasket_ShouldUpdateQuantityIfBookAlreadyInBasket() {
+        when(basketRepository.findById(1L)).thenReturn(Optional.of(basket));
+        when(bookRepository.findById(1L)).thenReturn(Optional.of(book));
         when(basketBookRepository.findByBasketIdAndBookId(1L, 1L)).thenReturn(Optional.of(basketBook));
         when(basketBookRepository.save(any(BasketBook.class))).thenReturn(basketBook);
-    
-        BasketBook result = basketBookService.addBookToBasket(1L, 1L, 1);
-    
+
+        BasketBook result = basketBookService.addBookToBasket(1L, 1L, 3);
+
         assertNotNull(result);
-        assertEquals(3, result.getQuantity());
-        verify(basketBookRepository).save(any(BasketBook.class));
+        assertEquals(5, result.getQuantity()); // 2 (initial) + 3 (added)
     }
 
     @Test
@@ -91,17 +102,18 @@ public class BasketBookServiceTest {
     }
 
     @Test
-    void getBasketBooks_ShouldReturnList() {
+    void getBasketBooks_ShouldReturnAllBooksInBasket() {
         when(basketBookRepository.findByBasketId(1L)).thenReturn(Arrays.asList(basketBook));
 
         List<BasketBook> result = basketBookService.getBasketBooks(1L);
 
         assertNotNull(result);
         assertEquals(1, result.size());
+        assertEquals(basketBook, result.get(0));
     }
 
     @Test
-    void calculateBasketTotal_ShouldReturnTotal() {
+    void calculateBasketTotal_ShouldReturnCorrectTotal() {
         when(basketBookRepository.findByBasketId(1L)).thenReturn(Arrays.asList(basketBook));
 
         double result = basketBookService.calculateBasketTotal(1L);
@@ -110,12 +122,11 @@ public class BasketBookServiceTest {
     }
 
     @Test
-    void clearBasket_ShouldDeleteAllBasketBooks() {
-        List<BasketBook> basketBooks = Arrays.asList(basketBook);
-        when(basketBookRepository.findByBasketId(1L)).thenReturn(basketBooks);
-        doNothing().when(basketBookRepository).deleteAll(basketBooks);
+    void clearBasket_ShouldRemoveAllBooksFromBasket() {
+        when(basketBookRepository.findByBasketId(1L)).thenReturn(Arrays.asList(basketBook));
 
-        assertDoesNotThrow(() -> basketBookService.clearBasket(1L));
-        verify(basketBookRepository).deleteAll(basketBooks);
+        basketBookService.clearBasket(1L);
+
+        verify(basketBookRepository, times(1)).deleteAll(anyList());
     }
 } 

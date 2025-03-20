@@ -4,6 +4,7 @@ import jakarta.persistence.*;
 import jakarta.validation.constraints.*;
 import java.io.Serializable;
 import java.time.LocalDateTime;
+import java.util.Date;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -12,7 +13,6 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 @Entity
 @Table(name = "users")
 @Inheritance(strategy = InheritanceType.JOINED)
-@DiscriminatorColumn(name = "user_type", discriminatorType = DiscriminatorType.STRING)
 public class User implements Serializable {
 
     private static final long serialVersionUID = 1L;
@@ -27,8 +27,8 @@ public class User implements Serializable {
     private String username;
 
     @Column(nullable = false)
-    @NotBlank(message = "Le mot de passe est obligatoire")
-    @Size(min = 8, message = "Le mot de passe doit contenir au moins 8 caractères")
+    @NotBlank(message = "Le mot de passe est obligatoire", groups = { CreateValidation.class })
+    @Size(min = 8, message = "Le mot de passe doit contenir au moins 8 caractères", groups = { CreateValidation.class })
     private String password;
 
     @Column(nullable = false, unique = true)
@@ -41,7 +41,7 @@ public class User implements Serializable {
 
     @Column(name = "last_name")
     private String lastName;
-    
+
     @Column(name = "subscribed_to_newsletter")
     private boolean subscribedToNewsletter;
 
@@ -50,11 +50,12 @@ public class User implements Serializable {
     private String role;
 
     @Column(name = "registration_date")
-    private LocalDateTime registrationDate;
+    @Temporal(TemporalType.TIMESTAMP)
+    private Date registrationDate;
 
     @Column(name = "active")
     private boolean active = true; // Renommé le champ et gardé la valeur par défaut
-    
+
     @JsonIgnore
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
     private Set<Book> books = new HashSet<>();
@@ -64,7 +65,8 @@ public class User implements Serializable {
     private Set<Order> orders = new HashSet<>();
 
     // Constructeurs
-    public User() {}
+    public User() {
+    }
 
     public User(String username, String password, String email) {
         this.username = username;
@@ -73,44 +75,106 @@ public class User implements Serializable {
     }
 
     // Getters et Setters
-    public Long getId() { return id; }
-    public void setId(Long id) { this.id = id; }
+    public Long getId() {
+        return id;
+    }
 
-    public String getUsername() { return username; }
-    public void setUsername(String username) { this.username = username; }
+    public void setId(Long id) {
+        this.id = id;
+    }
 
-    public String getPassword() { return password; }
-    public void setPassword(String password) { this.password = password; }
+    public String getUsername() {
+        return username;
+    }
 
-    public String getEmail() { return email; }
-    public void setEmail(String email) { this.email = email; }
+    public void setUsername(String username) {
+        this.username = username;
+    }
 
-    public String getFirstName() { return firstName; }
-    public void setFirstName(String firstName) { this.firstName = firstName; }
+    public String getPassword() {
+        return password;
+    }
 
-    public String getLastName() { return lastName; }
-    public void setLastName(String lastName) { this.lastName = lastName; }
-    
-    public boolean isSubscribedToNewsletter() { return subscribedToNewsletter; }
+    public void setPassword(String password) {
+        this.password = password;
+    }
+
+    public String getEmail() {
+        return email;
+    }
+
+    public void setEmail(String email) {
+        this.email = email;
+    }
+
+    public String getFirstName() {
+        return firstName;
+    }
+
+    public void setFirstName(String firstName) {
+        this.firstName = firstName;
+    }
+
+    public String getLastName() {
+        return lastName;
+    }
+
+    public void setLastName(String lastName) {
+        this.lastName = lastName;
+    }
+
+    public boolean isSubscribedToNewsletter() {
+        return subscribedToNewsletter;
+    }
+
     public void setSubscribedToNewsletter(boolean subscribedToNewsletter) {
-        this.subscribedToNewsletter = subscribedToNewsletter; }
+        this.subscribedToNewsletter = subscribedToNewsletter;
+    }
 
-    public String getPhone() { return phone; }
-    public void setPhone(String phone) { this.phone = phone; }
+    public String getPhone() {
+        return phone;
+    }
 
-    public String getAddress() { return address; }
-    public void setAddress(String address) { this.address = address; }
-    
-    public String getRole() { return role; }
-    public void setRole(String role) { this.role = role; }
+    public void setPhone(String phone) {
+        this.phone = phone;
+    }
 
-    public boolean isActive() { return active; } // Le getter suivant la convention JavaBean
-    public void setActive(boolean active) { this.active = active; } // Le setter correspondant
+    public String getAddress() {
+        return address;
+    }
 
-    public LocalDateTime getRegistrationDate() { return registrationDate; }
-    public void setRegistrationDate(LocalDateTime registrationDate) { this.registrationDate = registrationDate; }
+    public void setAddress(String address) {
+        this.address = address;
+    }
 
-    public Set<Book> getBooks() { return books; }
+    public String getRole() {
+        return role;
+    }
+
+    public void setRole(String role) {
+        this.role = role;
+    }
+
+    public boolean isActive() {
+        return active;
+    } // Le getter suivant la convention JavaBean
+
+    public void setActive(boolean active) {
+        this.active = active;
+    } // Le setter correspondant
+
+    public Date getRegistrationDate() {
+        return registrationDate;
+    }
+
+    public void setRegistrationDate(Date registrationDate) {
+        this.registrationDate = registrationDate;
+    }
+
+    public Set<Book> getBooks() {
+        return books;
+    }
+
     public void setBooks(Set<Book> books) {
         this.books = books;
         if (books != null) {
@@ -118,7 +182,10 @@ public class User implements Serializable {
         }
     }
 
-    public Set<Order> getOrders() { return orders; }
+    public Set<Order> getOrders() {
+        return orders;
+    }
+
     public void setOrders(Set<Order> orders) {
         this.orders = orders;
         if (orders != null) {
@@ -160,10 +227,16 @@ public class User implements Serializable {
         }
     }
 
-    // Méthodes de validation
+    // Méthodes de validation et initialisation
     @PrePersist
     @PreUpdate
-    protected void validateData() {
+    protected void validateAndInitialize() {
+        // Initialiser la date d'enregistrement si elle est nulle (lors de la création)
+        if (registrationDate == null) {
+            registrationDate = new Date();
+        }
+
+        // Valider les données
         if (username != null && (username.length() < 3 || username.length() > 50)) {
             throw new IllegalStateException("La longueur du nom d'utilisateur est invalide");
         }
@@ -174,8 +247,10 @@ public class User implements Serializable {
 
     @Override
     public boolean equals(Object o) {
-        if (this == o) return true;
-        if (!(o instanceof User)) return false;
+        if (this == o)
+            return true;
+        if (!(o instanceof User))
+            return false;
         User user = (User) o;
         return id != null && id.equals(user.getId());
     }
@@ -188,14 +263,18 @@ public class User implements Serializable {
     @Override
     public String toString() {
         return "User{" +
-            "id=" + id +
-            ", username='" + username + '\'' +
-            ", email='" + email + '\'' +
-            ", firstName='" + firstName + '\'' +
-            ", lastName='" + lastName + '\'' +
-            ", active=" + active +
-            ", numberOfBooks=" + (books != null ? books.size() : 0) +
-            ", numberOfOrders=" + (orders != null ? orders.size() : 0) +
-            '}';
+                "id=" + id +
+                ", username='" + username + '\'' +
+                ", email='" + email + '\'' +
+                ", firstName='" + firstName + '\'' +
+                ", lastName='" + lastName + '\'' +
+                ", active=" + active +
+                ", numberOfBooks=" + (books != null ? books.size() : 0) +
+                ", numberOfOrders=" + (orders != null ? orders.size() : 0) +
+                '}';
+    }
+
+    // Interface pour la validation lors de la création
+    public interface CreateValidation {
     }
 }

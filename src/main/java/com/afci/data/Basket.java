@@ -10,15 +10,11 @@ import jakarta.persistence.*;
 public class Basket {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long basketId;
+    @Column(name = "id")
+    private Long id;
 
-    @ManyToMany
-    @JoinTable(
-        name = "basket_books",
-        joinColumns = @JoinColumn(name = "basket_id"),
-        inverseJoinColumns = @JoinColumn(name = "book_id")
-    )
-    private Set<Book> books = new HashSet<>();
+    @OneToMany(mappedBy = "basket", cascade = CascadeType.ALL, orphanRemoval = true)
+    private Set<BasketBook> basketBooks = new HashSet<>();
 
     @OneToOne
     @JoinColumn(name = "customer_id")
@@ -39,20 +35,39 @@ public class Basket {
     }
 
     // Getters et Setters
-    public Long getBasketId() {
-        return basketId;
+    public Long getId() {
+        return id;
     }
 
-    public void setBasketId(Long basketId) {
-        this.basketId = basketId;
+    public void setId(Long id) {
+        this.id = id;
     }
 
     public Set<Book> getBooks() {
+        Set<Book> books = new HashSet<>();
+        for (BasketBook basketBook : basketBooks) {
+            books.add(basketBook.getBook());
+        }
         return books;
     }
 
     public void setBooks(Set<Book> books) {
-        this.books = books;
+        basketBooks.clear();
+        
+        if (books != null) {
+            for (Book book : books) {
+                addBook(book);
+            }
+        }
+        updateTotals();
+    }
+
+    public Set<BasketBook> getBasketBooks() {
+        return basketBooks;
+    }
+
+    public void setBasketBooks(Set<BasketBook> basketBooks) {
+        this.basketBooks = basketBooks;
         updateTotals();
     }
 
@@ -75,22 +90,38 @@ public class Basket {
     // Méthodes métier
     public void addBook(Book book) {
         if (book != null) {
-            books.add(book);
+            BasketBook existingBasketBook = null;
+            for (BasketBook basketBook : basketBooks) {
+                if (basketBook.getBook().equals(book)) {
+                    existingBasketBook = basketBook;
+                    break;
+                }
+            }
+            
+            if (existingBasketBook != null) {
+                existingBasketBook.setQuantity(existingBasketBook.getQuantity() + 1);
+            } else {
+                BasketBook basketBook = new BasketBook(this, book, 1);
+                basketBooks.add(basketBook);
+            }
             updateTotals();
         }
     }
 
     private void updateTotals() {
-        this.totalItems = books.size();
-        this.totalPrice = books.stream()
-            .mapToDouble(Book::getPrice)
-            .sum();
+        this.totalItems = 0;
+        this.totalPrice = 0.0;
+        
+        for (BasketBook basketBook : basketBooks) {
+            this.totalItems += basketBook.getQuantity();
+            this.totalPrice += basketBook.getBook().getPrice() * basketBook.getQuantity();
+        }
     }
 
     @Override
     public String toString() {
         return "Basket{" +
-            "basketId=" + basketId +
+            "id=" + id +
             ", customer=" + (customer != null ? customer.getUsername() : "null") +
             ", totalItems=" + totalItems +
             ", totalPrice=" + totalPrice +

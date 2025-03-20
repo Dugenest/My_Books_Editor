@@ -8,10 +8,13 @@ import org.springframework.web.bind.annotation.*;
 import com.afci.data.PasswordChangeRequest;
 import com.afci.data.User;
 import com.afci.service.UserService;
+import com.afci.service.AuthorService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
+
+import java.util.Map;
 
 @RestController
 @RequestMapping("/api/users")
@@ -20,6 +23,9 @@ public class UserController {
 
     @Autowired
     private UserService userService;
+
+    @Autowired
+    private AuthorService authorService;
 
     @Operation(summary = "Get all users")
     @GetMapping
@@ -54,11 +60,20 @@ public class UserController {
 
     @Operation(summary = "Delete user")
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> deleteUser(
+    public ResponseEntity<?> deleteUser(
         @Parameter(description = "User ID") @PathVariable Long id
     ) {
-        userService.deleteUser(id);
-        return ResponseEntity.noContent().build();
+        try {
+            userService.deleteUser(id);
+            return ResponseEntity.noContent().build();
+        } catch (RuntimeException e) {
+            return ResponseEntity
+                .status(HttpStatus.BAD_REQUEST)
+                .body(Map.of(
+                    "error", "Erreur lors de la suppression",
+                    "message", e.getMessage()
+                ));
+        }
     }
 
     @Operation(summary = "Change user password")
@@ -69,5 +84,23 @@ public class UserController {
     ) {
         userService.changePassword(id, request);
         return ResponseEntity.ok().build();
+    }
+
+    @Operation(summary = "Force delete author by ID")
+    @DeleteMapping("/force-delete-by-author/{id}")
+    public ResponseEntity<?> forceDeleteByAuthor(
+        @Parameter(description = "Author ID") @PathVariable Long id
+    ) {
+        try {
+            authorService.forceDeleteAuthor(id);
+            return ResponseEntity.noContent().build();
+        } catch (Exception e) {
+            return ResponseEntity
+                .status(HttpStatus.BAD_REQUEST)
+                .body(Map.of(
+                    "error", "Erreur lors de la suppression forcée",
+                    "message", e.getMessage()
+                ));
+        }
     }
 }

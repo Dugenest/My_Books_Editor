@@ -26,6 +26,7 @@ public interface BookRepository extends JpaRepository<Book, Long> {
     List<Book> findByPublishDateYear(@Param("year") int year);
 
     // Recherche par auteur et catégorie
+    @Query("SELECT b FROM Book b JOIN b.categories c WHERE b.author.id = :authorId AND c.id = :categoryId")
     List<Book> findByAuthor_IdAndCategory_Id(Long authorId, Long categoryId);
 
     // Recherche des livres disponibles en stock
@@ -35,10 +36,11 @@ public interface BookRepository extends JpaRepository<Book, Long> {
     
     List<Book> findByTitleContainingIgnoreCase(String title);
 
-  	List<Book> findByCategory_Name(String category);
+    @Query("SELECT b FROM Book b JOIN b.categories c WHERE c.name = :categoryName")
+    List<Book> findByCategory_Name(@Param("categoryName") String categoryName);
 
-  	List<Book> findByAuthor_LastNameContainingIgnoreCaseOrAuthor_FirstNameContainingIgnoreCase(String lastName,
-  			String firstName);		
+    List<Book> findByAuthor_LastNameContainingIgnoreCaseOrAuthor_FirstNameContainingIgnoreCase(String lastName,
+            String firstName);        
 
     // Recherche complexe avec plusieurs critères
     @Query("SELECT b FROM Book b WHERE " +
@@ -55,7 +57,7 @@ public interface BookRepository extends JpaRepository<Book, Long> {
     	);
 
     // Compter le nombre de livres par catégorie
-    @Query("SELECT COUNT(b) FROM Book b WHERE b.category.id = :categoryId")
+    @Query("SELECT COUNT(b) FROM Book b JOIN b.categories c WHERE c.id = :categoryId")
     long countBooksByCategory(@Param("categoryId") Long categoryId);
 
     // Vérifier l'existence d'un livre par ISBN

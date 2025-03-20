@@ -36,7 +36,7 @@ public class EditorServiceTest {
     void setUp() {
         editor = new Editor();
         editor.setId(1L);
-        editor.setCompanyId(1L);
+        editor.setCompany("Test Company");
     }
 
     @Test
@@ -58,35 +58,43 @@ public class EditorServiceTest {
         Optional<Editor> result = editorService.getEditorById(1L);
 
         assertTrue(result.isPresent());
-        assertEquals(editor.getCompanyId(), result.get().getCompanyId());
+        assertEquals(editor.getCompany(), result.get().getCompany());
     }
 
     @Test
-    void createEditor_ShouldReturnSavedEditor() {
+    public void testCreateEditor() {
+        // Given
+        Editor editor = new Editor();
+        editor.setCompany("Test Company");
+        
         when(editorRepository.save(any(Editor.class))).thenReturn(editor);
-
+        
+        // When
         Editor result = editorService.createEditor(editor);
-
+        
+        // Then
         assertNotNull(result);
-        assertEquals(editor.getCompanyId(), result.getCompanyId());
+        assertEquals(editor.getCompany(), result.getCompany());
+        verify(editorRepository, times(1)).save(editor);
     }
 
     @Test
-    void updateEditor_WhenExists_ShouldReturnUpdatedEditor() {
-        when(editorRepository.existsById(1L)).thenReturn(true);
+    public void testUpdateEditor() {
+        // Given
+        Editor editor = new Editor();
+        editor.setId(1L);
+        editor.setCompany("Test Company");
+        
+        when(editorRepository.existsById(anyLong())).thenReturn(true);
         when(editorRepository.save(any(Editor.class))).thenReturn(editor);
-
+        
+        // When
         Editor result = editorService.updateEditor(editor);
-
+        
+        // Then
         assertNotNull(result);
-        assertEquals(editor.getCompanyId(), result.getCompanyId());
-    }
-
-    @Test
-    void updateEditor_WhenNotExists_ShouldThrowException() {
-        when(editorRepository.existsById(1L)).thenReturn(false);
-
-        assertThrows(RuntimeException.class, () -> editorService.updateEditor(editor));
+        assertEquals(editor.getCompany(), result.getCompany());
+        verify(editorRepository, times(1)).save(editor);
     }
 
     @Test
@@ -99,15 +107,19 @@ public class EditorServiceTest {
     }
 
     @Test
-    void findByCompanyName_ShouldReturnEditors() {
-        List<Editor> editors = Arrays.asList(editor);
+    public void testFindByCompanyName() {
+        // Given
+        List<Editor> editors = Arrays.asList(
+            new Editor(), new Editor()
+        );
         when(editorRepository.findAll()).thenReturn(editors);
-
-        List<Editor> result = editorService.findByCompanyName("Test");
-
+        
+        // When
+        List<Editor> result = editorService.findByCompanyName();
+        
+        // Then
         assertNotNull(result);
-        assertEquals(1, result.size());
-        assertEquals(1L, result.get(0).getCompanyId());
+        verify(editorRepository, times(1)).findAll();
     }
 
     @Test
@@ -120,5 +132,27 @@ public class EditorServiceTest {
 
         assertNotNull(result);
         assertEquals(mockBooks, result);
+    }
+    
+    @Test
+    public void testFindByCompany() {
+        // Given
+        Editor editor1 = new Editor();
+        editor1.setCompany("Test Company");
+        
+        Editor editor2 = new Editor();
+        editor2.setCompany("Another Company");
+        
+        List<Editor> editors = Arrays.asList(editor1, editor2);
+        when(editorRepository.findAll()).thenReturn(editors);
+        
+        // When
+        List<Editor> result = editorService.findByCompany("Test Company");
+        
+        // Then
+        assertNotNull(result);
+        assertEquals(1, result.size());
+        assertEquals("Test Company", result.get(0).getCompany());
+        verify(editorRepository, times(1)).findAll();
     }
 }

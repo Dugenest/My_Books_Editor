@@ -59,7 +59,7 @@ public class CategoryServiceTest {
 
     @Test
     void testCreateCategory() {
-        when(categoryRepository.save(any())).thenReturn(category);
+        when(categoryRepository.save(any(Category.class))).thenReturn(category);
 
         Category result = categoryService.createCategory(category);
         assertNotNull(result);
@@ -68,8 +68,8 @@ public class CategoryServiceTest {
 
     @Test
     void testUpdateCategory() {
-        when(categoryRepository.existsById(1L)).thenReturn(true);
-        when(categoryRepository.save(any())).thenReturn(category);
+        when(categoryRepository.findById(1L)).thenReturn(Optional.of(category));
+        when(categoryRepository.save(any(Category.class))).thenReturn(category);
 
         Category result = categoryService.updateCategory(category);
         assertEquals("Science Fiction", result.getName());
@@ -77,7 +77,9 @@ public class CategoryServiceTest {
 
     @Test
     void testDeleteCategory() {
+        when(categoryRepository.findById(1L)).thenReturn(Optional.of(category));
         doNothing().when(categoryRepository).deleteById(1L);
+        
         assertDoesNotThrow(() -> categoryService.deleteCategory(1L));
     }
 

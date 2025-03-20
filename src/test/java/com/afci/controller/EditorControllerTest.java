@@ -16,6 +16,10 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 
@@ -38,21 +42,28 @@ public class EditorControllerTest {
     void setUp() {
         editor = new Editor();
         editor.setId(1L);
-        editor.setCompanyId(1L);
+        editor.setCompany("Test Company");
     }
 
+    @SuppressWarnings("null")
     @Test
     void getAllEditors_ShouldReturnEditors() {
+        // Given
         List<Editor> editors = Arrays.asList(editor);
-        when(editorService.getAllEditors()).thenReturn(editors);
+        Pageable pageable = PageRequest.of(0, 10);
+        Page<Editor> editorPage = new PageImpl<>(editors, pageable, editors.size());
+        when(editorService.getAllEditors(pageable)).thenReturn(editorPage);
 
-        ResponseEntity<List<Editor>> response = editorController.getAllEditors();
+        // When
+        ResponseEntity<?> response = editorController.getAllEditors(pageable);
 
+        // Then
         assertEquals(HttpStatus.OK, response.getStatusCode());
         assertNotNull(response.getBody());
-        assertEquals(1, response.getBody().size());
+        assertEquals(editorPage, response.getBody());
     }
 
+    @SuppressWarnings("null")
     @Test
     void getEditorById_ShouldReturnEditor() {
         when(editorService.getEditorById(1L)).thenReturn(Optional.of(editor));
@@ -61,6 +72,7 @@ public class EditorControllerTest {
 
         assertEquals(HttpStatus.OK, response.getStatusCode());
         assertTrue(response.getBody().isPresent());
+        assertEquals(editor.getCompany(), response.getBody().get().getCompany());
     }
 
     @SuppressWarnings("null")
@@ -72,9 +84,10 @@ public class EditorControllerTest {
 
         assertEquals(HttpStatus.CREATED, response.getStatusCode());
         assertNotNull(response.getBody());
-        assertEquals(editor.getCompanyId(), response.getBody().getCompanyId());
+        assertEquals(editor.getCompany(), response.getBody().getCompany());
     }
 
+    @SuppressWarnings("null")
     @Test
     void updateEditor_ShouldReturnUpdatedEditor() {
         when(editorService.updateEditor(any(Editor.class))).thenReturn(editor);
@@ -83,7 +96,7 @@ public class EditorControllerTest {
 
         assertEquals(HttpStatus.OK, response.getStatusCode());
         assertNotNull(response.getBody());
-        assertEquals(editor.getCompanyId(), response.getBody().getCompanyId());
+        assertEquals(editor.getCompany(), response.getBody().getCompany());
     }
 
     @Test
@@ -104,5 +117,39 @@ public class EditorControllerTest {
 
         assertEquals(HttpStatus.OK, response.getStatusCode());
         assertNotNull(response.getBody());
+    }
+
+    @Test
+    public void testGetAllEditors() {
+        // Given
+        List<Editor> editors = Arrays.asList(new Editor(), new Editor());
+        Pageable pageable = PageRequest.of(0, 10);
+        Page<Editor> editorPage = new PageImpl<>(editors, pageable, editors.size());
+        
+        // When
+        when(editorService.getAllEditors(pageable)).thenReturn(editorPage);
+        ResponseEntity<?> response = editorController.getAllEditors(pageable);
+        
+        // Then
+        assertEquals(HttpStatus.OK, response.getStatusCode());
+        assertEquals(editorPage, response.getBody());
+        verify(editorService, times(1)).getAllEditors(pageable);
+    }
+
+    @Test
+    public void testUpdateEditor() {
+        // Given
+        long editorId = 1L;
+        Editor editor = new Editor();
+        editor.setId(editorId);
+        editor.setCompany("Test Company");
+        
+        // When
+        when(editorService.updateEditor(editor)).thenReturn(editor);
+        ResponseEntity<Editor> response = editorController.updateEditor(editorId, editor);
+        
+        // Then
+        assertEquals(HttpStatus.OK, response.getStatusCode());
+        assertEquals(editor.getCompany(), response.getBody().getCompany());
     }
 }

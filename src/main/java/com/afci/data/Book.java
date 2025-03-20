@@ -1,13 +1,33 @@
 package com.afci.data;
 
-import com.fasterxml.jackson.annotation.JsonFormat;
-import jakarta.persistence.*;
-import jakarta.validation.constraints.*;
 import java.io.Serializable;
 import java.time.LocalDate;
 import java.util.Date;
 import java.util.HashSet;
 import java.util.Set;
+
+import com.fasterxml.jackson.annotation.JsonFormat;
+import com.fasterxml.jackson.annotation.JsonIgnore;
+
+import jakarta.persistence.CascadeType;
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.JoinTable;
+import jakarta.persistence.ManyToMany;
+import jakarta.persistence.ManyToOne;
+import jakarta.persistence.OneToMany;
+import jakarta.persistence.Table;
+import jakarta.persistence.Temporal;
+import jakarta.persistence.TemporalType;
+import jakarta.validation.constraints.DecimalMin;
+import jakarta.validation.constraints.Min;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Pattern;
 
 @Entity
 @Table(name = "books")
@@ -42,42 +62,50 @@ public class Book implements Serializable {
     @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd")
     @Column(name = "reward_date")
     @Temporal(TemporalType.DATE)
-    private Date rewardDate;
+    private LocalDate rewardDate;
 
     @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd")
     @Column(name = "publish_date")
     @Temporal(TemporalType.DATE)
     private LocalDate publishDate;
 
+    @JsonIgnore
     @ManyToOne
     @JoinColumn(name = "author_id")
     private Author author;
 
+    @JsonIgnore
     @ManyToOne
     @JoinColumn(name = "editor_id")
     private Editor editor;
 
+    @JsonIgnore
     @ManyToOne
     @JoinColumn(name = "administrator_id")
     private Administrator administrator;
 
+    @JsonIgnore
     @ManyToOne
     @JoinColumn(name = "user_id")
     private User user;
 
+    @JsonIgnore
     @ManyToMany
     @JoinTable(name = "book_category", joinColumns = @JoinColumn(name = "book_id"), inverseJoinColumns = @JoinColumn(name = "category_id"))
     private Set<Category> categories = new HashSet<>();
 
+    @JsonIgnore
+    @ManyToMany
+    @JoinTable(name = "book_author", joinColumns = @JoinColumn(name = "book_id"), inverseJoinColumns = @JoinColumn(name = "author_id"))
+    private Set<Author> authors = new HashSet<>();
+
+    @JsonIgnore
     @ManyToMany(mappedBy = "books")
     private Set<Order> orders = new HashSet<>();
 
-    @ManyToMany(mappedBy = "books")
-    private Set<Basket> baskets = new HashSet<>();
-
-    @ManyToOne
-    @JoinColumn(name = "category_id") // Adjust column name if needed
-    private Category category;
+    @JsonIgnore
+    @OneToMany(mappedBy = "book", cascade = CascadeType.ALL, orphanRemoval = true)
+    private Set<BasketBook> basketBooks = new HashSet<>();
 
     // Constructeurs
     public Book() {
@@ -150,11 +178,11 @@ public class Book implements Serializable {
         this.stock = stock;
     }
 
-    public Date getRewardDate() {
+    public LocalDate getRewardDate() {
         return rewardDate;
     }
 
-    public void setRewardDate(Date rewardDate) {
+    public void setRewardDate(LocalDate rewardDate) {
         this.rewardDate = rewardDate;
     }
 
@@ -215,12 +243,12 @@ public class Book implements Serializable {
         this.orders = orders;
     }
 
-    public Set<Basket> getBaskets() {
-        return baskets;
+    public Set<BasketBook> getBasketBooks() {
+        return basketBooks;
     }
 
-    public void setBaskets(Set<Basket> baskets) {
-        this.baskets = baskets;
+    public void setBasketBooks(Set<BasketBook> basketBooks) {
+        this.basketBooks = basketBooks;
     }
 
     public User getUser() {
@@ -229,6 +257,14 @@ public class Book implements Serializable {
 
     public void setUser(User user) {
         this.user = user;
+    }
+
+    public Set<Author> getAuthors() {
+        return authors;
+    }
+
+    public void setAuthors(Set<Author> authors) {
+        this.authors = authors;
     }
 
     // Méthodes métier
@@ -265,6 +301,20 @@ public class Book implements Serializable {
         }
     }
 
+    public void addAuthor(Author author) {
+        if (author != null) {
+            authors.add(author);
+            author.getBooks().add(this);
+        }
+    }
+
+    public void removeAuthor(Author author) {
+        if (author != null) {
+            authors.remove(author);
+            author.getBooks().remove(this);
+        }
+    }
+
     @Override
     public boolean equals(Object o) {
         if (this == o)
@@ -290,5 +340,13 @@ public class Book implements Serializable {
                 ", stock=" + stock +
                 ", categories=" + categories.size() +
                 '}';
+    }
+
+    public Set<Basket> getBaskets() {
+        Set<Basket> baskets = new HashSet<>();
+        for (BasketBook basketBook : basketBooks) {
+            baskets.add(basketBook.getBasket());
+        }
+        return baskets;
     }
 }

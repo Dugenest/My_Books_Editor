@@ -6,9 +6,13 @@ import org.springframework.mail.SimpleMailMessage;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 @Service
 public class EmailService {
+    
+    private static final Logger logger = LoggerFactory.getLogger(EmailService.class);
     
     @Autowired
     private JavaMailSender mailSender;
@@ -18,6 +22,9 @@ public class EmailService {
     
     @Value("${spring.mail.from:no-reply@mybooks.com}")
     private String fromEmail;
+    
+    // Mode simulé (pas d'envoi réel d'emails)
+    private static final boolean SIMULATION_MODE = true;
     
     /**
      * Envoie un email de confirmation d'inscription
@@ -41,12 +48,15 @@ public class EmailService {
                 "Cordialement,\n" +
                 "L'équipe MyBooks");
         
-        try {
-            mailSender.send(message);
-        } catch (Exception e) {
-            // En développement, afficher l'URL de confirmation dans les logs
-            System.out.println("Échec d'envoi d'email. URL de confirmation: " + confirmationUrl);
-            e.printStackTrace();
+        if (SIMULATION_MODE) {
+            logger.info("MODE SIMULATION: Email de confirmation qui serait envoyé à {}", to);
+            logger.info("URL de confirmation: {}", confirmationUrl);
+        } else {
+            try {
+                mailSender.send(message);
+            } catch (Exception e) {
+                logger.error("Échec d'envoi d'email. URL de confirmation: {}", confirmationUrl, e);
+            }
         }
     }
     
@@ -71,11 +81,15 @@ public class EmailService {
                 "Cordialement,\n" +
                 "L'équipe MyBooks");
         
-        try {
-            mailSender.send(message);
-        } catch (Exception e) {
-            System.out.println("Échec d'envoi d'email. URL de réinitialisation: " + resetUrl);
-            e.printStackTrace();
+        if (SIMULATION_MODE) {
+            logger.info("MODE SIMULATION: Email de réinitialisation de mot de passe qui serait envoyé à {}", to);
+            logger.info("URL de réinitialisation: {}", resetUrl);
+        } else {
+            try {
+                mailSender.send(message);
+            } catch (Exception e) {
+                logger.error("Échec d'envoi d'email. URL de réinitialisation: {}", resetUrl, e);
+            }
         }
     }
 }

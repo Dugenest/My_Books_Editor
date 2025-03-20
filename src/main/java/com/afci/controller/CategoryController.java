@@ -4,6 +4,8 @@ import java.util.List;
 import java.util.Optional;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.CrossOrigin;
@@ -12,7 +14,9 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.afci.data.Category;
@@ -20,14 +24,13 @@ import com.afci.service.CategoryService;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
-import io.swagger.v3.oas.annotations.parameters.RequestBody;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
-
 
 @RestController
 @RequestMapping("/api/categories")
 @Tag(name = "Category Management", description = "Category operations")
+@CrossOrigin(origins = "*", allowedHeaders = "*", methods = {RequestMethod.GET, RequestMethod.POST, RequestMethod.PUT, RequestMethod.DELETE})
 public class CategoryController {
 
     @Autowired
@@ -35,52 +38,120 @@ public class CategoryController {
 
     @Operation(summary = "Get all categories")
     @GetMapping
-    public ResponseEntity<List<Category>> getAllCategories() {
-        return ResponseEntity.ok(categoryService.getAllCategories());
+    public ResponseEntity<?> getAllCategories(Pageable pageable) {
+        try {
+            Page<Category> categories = categoryService.getAllCategories(pageable);
+            return ResponseEntity.ok(categories);
+        } catch (Exception e) {
+            e.printStackTrace();
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                .body(new ErrorResponse("Erreur lors de la récupération des catégories: " + e.getMessage()));
+        }
     }
 
     @Operation(summary = "Get category by ID")
     @GetMapping("/{id}")
-    public ResponseEntity<Optional<Category>> getCategoryById(
+    public ResponseEntity<?> getCategoryById(
         @Parameter(description = "Category ID") @PathVariable Long id
     ) {
-        return ResponseEntity.ok(categoryService.getCategoryById(id));
+        try {
+            Optional<Category> category = categoryService.getCategoryById(id);
+            if (category.isPresent()) {
+                return ResponseEntity.ok(category.get());
+            } else {
+                return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body(new ErrorResponse("Catégorie non trouvée avec l'ID : " + id));
+            }
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                .body(new ErrorResponse("Erreur lors de la récupération de la catégorie : " + e.getMessage()));
+        }
     }
 
     @Operation(summary = "Get books by category")
     @GetMapping("/{id}/books")
-    public ResponseEntity<Object> getBooksByCategory(
+    public ResponseEntity<?> getBooksByCategory(
         @Parameter(description = "Category ID") @PathVariable Long id
     ) {
-        return ResponseEntity.ok(categoryService.getBooksByCategory(id));
+        try {
+            return ResponseEntity.ok(categoryService.getBooksByCategory(id));
+        } catch (RuntimeException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                .body(new ErrorResponse(e.getMessage()));
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                .body(new ErrorResponse("Erreur lors de la récupération des livres : " + e.getMessage()));
+        }
     }
 
     @Operation(summary = "Create category")
     @PostMapping
-    public ResponseEntity<Category> createCategory(
+    public ResponseEntity<?> createCategory(
         @Parameter(description = "Category details") 
         @Valid @RequestBody Category category
     ) {
-        return new ResponseEntity<>(categoryService.createCategory(category), 
-            HttpStatus.CREATED);
+        try {
+            Category createdCategory = categoryService.createCategory(category);
+            return new ResponseEntity<>(createdCategory, HttpStatus.CREATED);
+        } catch (RuntimeException e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                .body(new ErrorResponse(e.getMessage()));
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                .body(new ErrorResponse("Erreur lors de la création de la catégorie : " + e.getMessage()));
+        }
     }
 
     @Operation(summary = "Update category")
     @PutMapping("/{id}")
-    public ResponseEntity<Category> updateCategory(
+    public ResponseEntity<?> updateCategory(
         @Parameter(description = "Category ID") @PathVariable Long id,
         @Parameter(description = "Category details") 
         @Valid @RequestBody Category category
     ) {
-        return ResponseEntity.ok(categoryService.updateCategory(category));
+        try {
+            category.setId(id);
+            Category updatedCategory = categoryService.updateCategory(category);
+            return ResponseEntity.ok(updatedCategory);
+        } catch (RuntimeException e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                .body(new ErrorResponse(e.getMessage()));
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                .body(new ErrorResponse("Erreur lors de la mise à jour de la catégorie : " + e.getMessage()));
+        }
     }
 
     @Operation(summary = "Delete category")
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> deleteCategory(
+    public ResponseEntity<?> deleteCategory(
         @Parameter(description = "Category ID") @PathVariable Long id
     ) {
-        categoryService.deleteCategory(id);
-        return ResponseEntity.noContent().build();
+        try {
+            categoryService.deleteCategory(id);
+            return ResponseEntity.noContent().build();
+        } catch (RuntimeException e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                .body(new ErrorResponse(e.getMessage()));
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                .body(new ErrorResponse("Erreur lors de la suppression de la catégorie : " + e.getMessage()));
+        }
+    }
+    
+    public static class ErrorResponse {
+        private String message;
+        
+        public ErrorResponse(String message) {
+            this.message = message;
+        }
+        
+        public String getMessage() {
+            return message;
+        }
+        
+        public void setMessage(String message) {
+            this.message = message;
+        }
     }
 }

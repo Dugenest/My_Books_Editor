@@ -90,7 +90,7 @@ public class BasketBook {
         StringBuilder sb = new StringBuilder();
         sb.append("BasketBook{")
           .append("id=").append(id)
-          .append(", basketId=").append(basket != null ? basket.getBasketId() : "null")
+          .append(", basketId=").append(basket != null ? basket.getId() : "null")
           .append(", bookId=").append(book != null ? book.getId() : "null")
           .append(", bookTitle=").append(book != null ? book.getTitle() : "null")
           .append(", quantity=").append(quantity)

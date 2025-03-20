@@ -38,7 +38,7 @@ public class BasketServiceTest {
         book.setTitle("Test Book");
 
         basket = new Basket();
-        basket.setBasketId(1L);
+        basket.setId(1L);
         Set<Book> books = new HashSet<>();
         books.add(book);
         basket.setBooks(books);
@@ -51,7 +51,7 @@ public class BasketServiceTest {
         Basket result = basketService.createBasket(basket);
 
         assertNotNull(result);
-        assertEquals(basket.getBasketId(), result.getBasketId());
+        assertEquals(basket.getId(), result.getId());
     }
 
     @Test
@@ -61,7 +61,7 @@ public class BasketServiceTest {
         Optional<Basket> result = basketService.getBasketById(1L);
 
         assertTrue(result.isPresent());
-        assertEquals(basket.getBasketId(), result.get().getBasketId());
+        assertEquals(basket.getId(), result.get().getId());
     }
 
     @Test

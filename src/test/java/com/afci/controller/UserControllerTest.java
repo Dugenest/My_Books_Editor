@@ -86,7 +86,7 @@ public class UserControllerTest {
     void deleteUser_ShouldReturnNoContent() {
         doNothing().when(userService).deleteUser(1L);
 
-        ResponseEntity<Void> response = userController.deleteUser(1L);
+        ResponseEntity<?> response = userController.deleteUser(1L);
 
         assertEquals(HttpStatus.NO_CONTENT, response.getStatusCode());
     }

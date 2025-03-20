@@ -36,7 +36,7 @@ public class BasketBookControllerTest {
     @BeforeEach
     void setUp() {
         basket = new Basket();
-        basket.setBasketId(1L);
+        basket.setId(1L);
 
         book = new Book();
         book.setId(1L);

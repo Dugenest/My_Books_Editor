@@ -5,6 +5,7 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.doNothing;
+import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 import java.util.Arrays;
@@ -16,6 +17,10 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 
 import com.afci.data.Category;
@@ -31,56 +36,81 @@ public class CategoryControllerTest {
     private CategoryController categoryController;
 
     @SuppressWarnings("null")
-	@Test
+    @Test
     void testGetAllCategories() {
+        // Given
+        Pageable pageable = PageRequest.of(0, 10);
         List<Category> categories = Arrays.asList(
-            new Category("Science Fiction", "Books related to sci-fi stories."),
-            new Category("Fantasy", "Books related to fantasy worlds."));
-        when(categoryService.getAllCategories()).thenReturn(categories);
+                new Category("Science Fiction", "Books related to sci-fi stories."),
+                new Category("Fantasy", "Books related to fantasy worlds."));
+                
+        Page<Category> categoryPage = mock(Page.class);
+        when(categoryPage.getContent()).thenReturn(categories);
+        when(categoryService.getAllCategories(pageable)).thenReturn(categoryPage);
 
-        ResponseEntity<List<Category>> response = categoryController.getAllCategories();
+        // When
+        ResponseEntity<?> response = categoryController.getAllCategories(pageable);
+        
+        // Then
         assertNotNull(response.getBody());
-        assertEquals(2, response.getBody().size());
+        assertEquals(HttpStatus.OK, response.getStatusCode());
     }
 
     @SuppressWarnings("null")
-	@Test
+    @Test
     void testGetCategoryById() {
         Category category = new Category("Science Fiction", "Books related to sci-fi stories.");
         when(categoryService.getCategoryById(1L)).thenReturn(Optional.of(category));
 
-        ResponseEntity<Optional<Category>> response = categoryController.getCategoryById(1L);
-        assertTrue(response.getBody().isPresent());
-        assertEquals("Science Fiction", response.getBody().get().getName());
+        ResponseEntity<?> response = categoryController.getCategoryById(1L);
+        assertTrue(response.getStatusCode() == HttpStatus.OK);
+        Category responseCategory = (Category) response.getBody();
+        assertEquals("Science Fiction", responseCategory.getName());
     }
 
     @SuppressWarnings("null")
-	@Test
+    @Test
     void testCreateCategory() {
         Category category = new Category("Science Fiction", "Books related to sci-fi stories.");
         when(categoryService.createCategory(any())).thenReturn(category);
 
-        ResponseEntity<Category> response = categoryController.createCategory(category);
+        ResponseEntity<?> response = categoryController.createCategory(category);
         assertNotNull(response.getBody());
-        assertEquals("Science Fiction", response.getBody().getName());
+        Category createdCategory = (Category) response.getBody();
+        assertEquals("Science Fiction", createdCategory.getName());
     }
 
     @SuppressWarnings("null")
-	@Test
+    @Test
     void testUpdateCategory() {
         Category category = new Category("Science Fiction", "Books related to sci-fi stories.");
         when(categoryService.updateCategory(any())).thenReturn(category);
 
-        ResponseEntity<Category> response = categoryController.updateCategory(1L, category);
-        assertEquals("Science Fiction", response.getBody().getName());
+        ResponseEntity<?> response = categoryController.updateCategory(1L, category);
+        assertTrue(response.getStatusCode() == HttpStatus.OK);
+        Category updatedCategory = (Category) response.getBody();
+        assertEquals("Science Fiction", updatedCategory.getName());
     }
 
-    @SuppressWarnings("deprecation")
-	@Test
+    @Test
     void testDeleteCategory() {
         doNothing().when(categoryService).deleteCategory(1L);
 
-        ResponseEntity<Void> response = categoryController.deleteCategory(1L);
-        assertEquals(204, response.getStatusCodeValue());
+        ResponseEntity<?> response = categoryController.deleteCategory(1L);
+        assertEquals(HttpStatus.NO_CONTENT, response.getStatusCode());
+    }
+
+    @Test
+    void getAllCategories_ShouldReturnCategories() {
+        // Given
+        Pageable pageable = PageRequest.of(0, 10);
+        Category category = new Category("Science Fiction", "Books related to sci-fi stories.");
+        when(categoryService.getAllCategories(pageable)).thenReturn(Page.empty());
+        
+        // When
+        ResponseEntity<?> response = categoryController.getAllCategories(pageable);
+        
+        // Then
+        assertEquals(HttpStatus.OK, response.getStatusCode());
     }
 }

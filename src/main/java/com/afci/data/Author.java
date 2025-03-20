@@ -1,14 +1,19 @@
 package com.afci.data;
 
-import jakarta.persistence.*;
 import java.time.LocalDate;
 import java.util.HashSet;
 import java.util.Set;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageImpl;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Pageable;
+
 import com.fasterxml.jackson.annotation.JsonIgnore;
+
+import jakarta.persistence.CascadeType;
+import jakarta.persistence.Column;
+import jakarta.persistence.DiscriminatorValue;
+import jakarta.persistence.Entity;
+import jakarta.persistence.ManyToMany;
+import jakarta.persistence.OneToMany;
+import jakarta.persistence.PrimaryKeyJoinColumn;
+import jakarta.persistence.Table;
 
 @Entity
 @Table(name = "authors")
@@ -17,7 +22,7 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 public class Author extends User {
 
     private static final long serialVersionUID = 1L;
-    
+
     @Column(name = "nationality")
     private String authorNationality;
 
@@ -28,36 +33,46 @@ public class Author extends User {
     @OneToMany(mappedBy = "author", cascade = CascadeType.ALL)
     private Set<Book> authoredBooks = new HashSet<>();
 
-    @Column(name = "first_name")
-    private String firstName;
-
-    @Column(name = "last_name")
-    private String lastName;
+    @JsonIgnore
+    @ManyToMany(mappedBy = "authors")
+    private Set<Book> books = new HashSet<>();
 
     @Column(name = "birth_date")
     private LocalDate birthDate;
 
     // Constructeurs
-    public Author() {}
+    public Author() {
+    }
 
     public Author(String username, String password, String email,
-                 String lastName, String firstName, String authorNationality) {
+            String lastName, String firstName, String authorNationality) {
         super(username, password, email);
-        this.lastName = lastName;
-        this.firstName = firstName;
+        super.setLastName(lastName);
+        super.setFirstName(firstName);
         this.authorNationality = authorNationality;
     }
 
     // Getters et Setters
-    public String getAuthorNationality() { return authorNationality; }
-    public void setAuthorNationality(String authorNationality) { 
-        this.authorNationality = authorNationality; 
+    public String getAuthorNationality() {
+        return authorNationality;
     }
 
-    public String getBiography() { return biography; }
-    public void setBiography(String biography) { this.biography = biography; }
+    public void setAuthorNationality(String authorNationality) {
+        this.authorNationality = authorNationality;
+    }
 
-    public Set<Book> getAuthoredBooks() { return authoredBooks; }
+    public String getBiography() {
+        return biography;
+    }
+
+    public void setBiography(String biography) {
+        this.biography = biography;
+    }
+
+    public Set<Book> getAuthoredBooks() {
+        return authoredBooks;
+    }
+
     public void setAuthoredBooks(Set<Book> books) {
         this.authoredBooks = books;
         if (books != null) {
@@ -65,14 +80,33 @@ public class Author extends User {
         }
     }
 
-    public String getFirstName() { return firstName; }
-    public void setFirstName(String firstName) { this.firstName = firstName; }
+    @Override
+    public String getFirstName() {
+        return super.getFirstName();
+    }
 
-    public String getLastName() { return lastName; }
-    public void setLastName(String lastName) { this.lastName = lastName; }
+    @Override
+    public void setFirstName(String firstName) {
+        super.setFirstName(firstName);
+    }
 
-    public LocalDate getBirthDate() { return birthDate; }
-    public void setBirthDate(LocalDate birthDate) { this.birthDate = birthDate; }
+    @Override
+    public String getLastName() {
+        return super.getLastName();
+    }
+
+    @Override
+    public void setLastName(String lastName) {
+        super.setLastName(lastName);
+    }
+
+    public LocalDate getBirthDate() {
+        return birthDate;
+    }
+
+    public void setBirthDate(LocalDate birthDate) {
+        this.birthDate = birthDate;
+    }
 
     // Méthodes utilitaires
     public void addAuthoredBook(Book book) {
@@ -94,15 +128,17 @@ public class Author extends User {
     @Override
     public String toString() {
         return "Author{" +
-               "id=" + getId() +
-               ", username='" + getUsername() + '\'' +
-               ", email='" + getEmail() + '\'' +
-               ", lastName='" + lastName + '\'' +
-               ", firstName='" + firstName + '\'' +
-               ", authorNationality='" + authorNationality + '\'' +
-               ", biography='" + (biography != null ? biography.substring(0, Math.min(biography.length(), 50)) + "..." : "null") + '\'' +
-               ", birthDate=" + birthDate +
-               ", numberOfAuthoredBooks=" + (authoredBooks != null ? authoredBooks.size() : 0) +
-               '}';
+                "id=" + getId() +
+                ", username='" + getUsername() + '\'' +
+                ", email='" + getEmail() + '\'' +
+                ", lastName='" + getLastName() + '\'' +
+                ", firstName='" + getFirstName() + '\'' +
+                ", authorNationality='" + authorNationality + '\'' +
+                ", biography='"
+                + (biography != null ? biography.substring(0, Math.min(biography.length(), 50)) + "..." : "null") + '\''
+                +
+                ", birthDate=" + birthDate +
+                ", numberOfAuthoredBooks=" + (authoredBooks != null ? authoredBooks.size() : 0) +
+                '}';
     }
 }

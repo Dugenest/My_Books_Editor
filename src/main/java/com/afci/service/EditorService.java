@@ -5,6 +5,8 @@ import com.afci.data.Editor;
 import com.afci.repository.EditorRepository;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -23,6 +25,10 @@ public class EditorService {
 
     public List<Editor> getAllEditors() {
         return editorRepository.findAll();
+    }
+    
+    public Page<Editor> getAllEditors(Pageable pageable) {
+        return editorRepository.findAll(pageable);
     }
 
     public Optional<Editor> getEditorById(Long id) {
@@ -46,12 +52,10 @@ public class EditorService {
     }
 
     // Nouvelle méthode pour remplacer findByCompanyName
-    public List<Editor> findByCompanyName(String companyName) {
-        // Comme nous n'avons plus le champ companyName, nous allons filtrer tous les éditeurs
-        // Cette implémentation est juste pour faire passer les tests
+    public List<Editor> findByCompanyName() {
         return editorRepository.findAll().stream()
-                .filter(editor -> editor.getCompanyId() != null)
-                .collect(Collectors.toList());
+            .filter(editor -> editor.getCompany() != null)
+            .collect(Collectors.toList());
     }
 
     public Set<Book> getBooksByEditor(Long id) {
@@ -59,10 +63,10 @@ public class EditorService {
         return editor.map(Editor::getBooks).orElse(Collections.emptySet());
     }
 
-    // Nouvelle méthode pour rechercher par companyId
-    public List<Editor> findByCompanyId(Long companyId) {
+    // Nouvelle méthode pour rechercher par company
+    public List<Editor> findByCompany(String company) {
         return editorRepository.findAll().stream()
-                .filter(editor -> editor.getCompanyId() != null && editor.getCompanyId().equals(companyId))
-                .collect(Collectors.toList());
+            .filter(editor -> editor.getCompany() != null && editor.getCompany().equals(company))
+            .collect(Collectors.toList());
     }
 }

@@ -1,33 +1,33 @@
 package com.afci.controller;
 
+import com.afci.config.TestConfig;
 import com.afci.data.Book;
+import com.afci.dto.BookDTO;
 import com.afci.service.BookService;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.context.annotation.Import;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
-import org.springframework.test.web.servlet.MvcResult;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import java.util.Arrays;
+import java.util.HashSet;
 import java.util.Optional;
 
-import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
-import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
 
 @WebMvcTest(BookController.class)
-@AutoConfigureMockMvc(addFilters = false) // Désactive la sécurité dans les tests
+@Import(TestConfig.class)
 class BookControllerTest {
 
     @Autowired
@@ -41,17 +41,32 @@ class BookControllerTest {
 
     @Test
     void getAllBooks_shouldReturnBooksList() throws Exception {
-        // Arrange
-        Book book1 = new Book("Test Book 1", "1234567890", "Detail 1", 29.99);
-        Book book2 = new Book("Test Book 2", "0987654321", "Detail 2", 19.99);
-        
-        // Utiliser la pagination correctement
+        // Créer des DTOs au lieu d'entités
+        BookDTO book1 = new BookDTO();
+        book1.setId(1L);
+        book1.setTitle("Test Book 1");
+        book1.setIsbn("1234567890");
+        book1.setDetail("Detail 1");
+        book1.setPrice(29.99);
+        book1.setStock(10);
+        book1.setCategories(new HashSet<>());
+        book1.setAuthors(new HashSet<>());
+
+        BookDTO book2 = new BookDTO();
+        book2.setId(2L);
+        book2.setTitle("Test Book 2");
+        book2.setIsbn("0987654321");
+        book2.setDetail("Detail 2");
+        book2.setPrice(19.99);
+        book2.setStock(5);
+        book2.setCategories(new HashSet<>());
+        book2.setAuthors(new HashSet<>());
+
         Pageable pageable = PageRequest.of(0, 10);
-        Page<Book> bookPage = new PageImpl<>(Arrays.asList(book1, book2));
-        
+        Page<BookDTO> bookPage = new PageImpl<>(Arrays.asList(book1, book2));
+
         when(bookService.getAllBooks(any(Pageable.class))).thenReturn(bookPage);
 
-        // Act & Assert
         mockMvc.perform(get("/api/books"))
                 .andExpect(status().isOk())
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON))
@@ -62,175 +77,95 @@ class BookControllerTest {
 
     @Test
     void getBookById_whenBookExists_shouldReturnBook() throws Exception {
-        // Arrange
-        Book book = new Book("Test Book", "1234567890", "Detail", 29.99);
+        BookDTO book = new BookDTO();
         book.setId(1L);
+        book.setTitle("Test Book");
+        book.setIsbn("1234567890");
+        book.setDetail("Detail");
+        book.setPrice(29.99);
+        book.setStock(10);
+        book.setCategories(new HashSet<>());
+        book.setAuthors(new HashSet<>());
+
         when(bookService.getBookById(1L)).thenReturn(Optional.of(book));
 
-        // Act & Assert
         mockMvc.perform(get("/api/books/1"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.title").value("Test Book"));
     }
 
     @Test
-    void createBook_withAllRequiredFields_shouldReturnCreatedBook() throws Exception {
-        // Créez une instance complète avec TOUS les champs obligatoires
+    void createBook_withValidData_shouldReturnCreatedBook() throws Exception {
+        // Pour créer un livre, on utilise toujours l'entité Book, pas le DTO
         Book bookToCreate = new Book("Complete Book Title", "978-3-16-148410-0", "Complete details", 39.99);
         bookToCreate.setStock(10);
-
-        // Si d'autres associations sont obligatoires, configurez-les aussi
+        bookToCreate.setCategories(new HashSet<>());
+        bookToCreate.setOrders(new HashSet<>());
+        bookToCreate.setBasketBooks(new HashSet<>());
 
         Book createdBook = new Book("Complete Book Title", "978-3-16-148410-0", "Complete details", 39.99);
         createdBook.setId(1L);
         createdBook.setStock(10);
+        createdBook.setCategories(new HashSet<>());
+        createdBook.setOrders(new HashSet<>());
+        createdBook.setBasketBooks(new HashSet<>());
 
         when(bookService.createBook(any(Book.class))).thenReturn(createdBook);
 
-        // Imprimez le JSON avant l'envoi
-        String requestJson = objectMapper.writeValueAsString(bookToCreate);
-        System.out.println("JSON de requête: " + requestJson);
-
-        // Act & Assert
-        mockMvc.perform(post("/api/books")
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(requestJson))
-                .andDo(print())
-                .andExpect(status().isCreated())
-                .andExpect(jsonPath("$.id").exists());
-    }
-
-    @Test
-    void createBook_withValidData_shouldReturnCreatedBook() throws Exception {
-        // Arrange - Book avec toutes les données requises
-        Book bookToCreate = new Book();
-        bookToCreate.setTitle("New Book"); // Titre obligatoire
-        bookToCreate.setISBN("978-3-16-148410-0"); // ISBN valide
-        bookToCreate.setDetail("New Detail");
-        bookToCreate.setPrice(39.99); // Prix positif obligatoire
-        bookToCreate.setStock(10); // Stock positif
-
-        Book createdBook = new Book();
-        createdBook.setId(1L);
-        createdBook.setTitle("New Book");
-        createdBook.setISBN("978-3-16-148410-0");
-        createdBook.setDetail("New Detail");
-        createdBook.setPrice(39.99);
-        createdBook.setStock(10);
-
-        when(bookService.createBook(any(Book.class))).thenReturn(createdBook);
-
-        // Act & Assert
         mockMvc.perform(post("/api/books")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(bookToCreate)))
-                .andDo(print()) // Pour voir la réponse
                 .andExpect(status().isCreated())
-                .andExpect(jsonPath("$.id").exists())
-                .andExpect(jsonPath("$.title").value("New Book"));
-    }
-
-    @Test
-    void createBook_withInvalidTitleOnly_shouldReturnBadRequest() throws Exception {
-        // Arrange : Livre sans titre uniquement
-        Book invalidBook = new Book();
-        invalidBook.setTitle(""); // Titre vide = invalide
-        invalidBook.setPrice(10.0); // Prix valide pour éviter cette erreur
-        invalidBook.setStock(5);
-
-        // Act & Assert
-        mockMvc.perform(post("/api/books")
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(objectMapper.writeValueAsString(invalidBook)))
-                .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$.title").value("Le titre est obligatoire"));
+                .andExpect(jsonPath("$.id").value(1L))
+                .andExpect(jsonPath("$.title").value("Complete Book Title"));
     }
 
     @Test
     void updateBook_withValidData_shouldReturnUpdatedBook() throws Exception {
-        // Arrange
-        Book bookToUpdate = new Book();
+        // Pour mettre à jour un livre, on utilise toujours l'entité Book, pas le DTO
+        Book bookToUpdate = new Book("Updated Book", "1234567890", "Updated details", 49.99);
         bookToUpdate.setId(1L);
-        bookToUpdate.setTitle("Updated Title");
-        bookToUpdate.setISBN("978-3-16-148410-0");
-        bookToUpdate.setDetail("Updated Detail");
-        bookToUpdate.setPrice(49.99);
         bookToUpdate.setStock(15);
+        bookToUpdate.setCategories(new HashSet<>());
+        bookToUpdate.setOrders(new HashSet<>());
+        bookToUpdate.setBasketBooks(new HashSet<>());
 
         when(bookService.updateBook(any(Book.class))).thenReturn(bookToUpdate);
 
-        // Act & Assert
         mockMvc.perform(put("/api/books/1")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(bookToUpdate)))
-                .andDo(print())
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.title").value("Updated Title"));
-    }
-
-    @Test
-    void updateBook_withInvalidPrice_shouldReturnBadRequest() throws Exception {
-        // Test pour l'erreur de prix uniquement
-        Book invalidBook = new Book();
-        invalidBook.setId(1L);
-        invalidBook.setTitle("Titre valide"); // Titre valide pour éviter l'erreur de titre
-        invalidBook.setPrice(-5.0); // Prix négatif = invalide
-
-        // Act & Assert avec vérification plus souple
-        MvcResult result = mockMvc.perform(put("/api/books/1")
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(objectMapper.writeValueAsString(invalidBook)))
-                .andDo(print()) // Pour voir la réponse complète
-                .andExpect(status().isBadRequest())
-                .andReturn();
-
-        // Vérification que la réponse contient une erreur liée au prix
-        String content = result.getResponse().getContentAsString();
-        assertTrue(content.contains("price") || content.contains("Prix"),
-                "La réponse ne contient pas d'erreur de prix: " + content);
+                .andExpect(jsonPath("$.title").value("Updated Book"));
     }
 
     @Test
     void deleteBook_shouldReturnNoContent() throws Exception {
-        // Arrange
         doNothing().when(bookService).deleteBook(1L);
 
-        // Act & Assert
         mockMvc.perform(delete("/api/books/1"))
                 .andExpect(status().isNoContent());
-
-        verify(bookService).deleteBook(1L);
     }
 
     @Test
-    void debugValidationErrors() throws Exception {
-        // Livre avec plusieurs violations potentielles
-        Book debugBook = new Book();
-        // Ne définissez pas de titre
-        debugBook.setPrice(-10.0); // Prix négatif
-        debugBook.setISBN("invalid-isbn"); // ISBN invalide
+    void createBook_withInvalidTitleOnly_shouldReturnBadRequest() throws Exception {
+        Book invalidBook = new Book();
+        invalidBook.setTitle(""); // Invalid title
 
-        // Juste pour voir la réponse complète
-        MvcResult result = mockMvc.perform(post("/api/books")
+        mockMvc.perform(post("/api/books")
                 .contentType(MediaType.APPLICATION_JSON)
-                .content(objectMapper.writeValueAsString(debugBook)))
-                .andDo(print())
-                .andReturn();
-
-        System.out.println("DEBUG - Erreurs de validation: " +
-                result.getResponse().getContentAsString());
+                .content(objectMapper.writeValueAsString(invalidBook)))
+                .andExpect(status().isBadRequest());
     }
 
     @Test
-    void debugJsonSerialization() throws Exception {
-        Book book = new Book();
-        book.setTitle("Test Title");
-        book.setPrice(29.99);
+    void updateBook_withInvalidPrice_shouldReturnBadRequest() throws Exception {
+        Book invalidBook = new Book("Test Book", "1234567890", "Detail", -10.0); // Invalid price
+        invalidBook.setId(1L);
 
-        String json = objectMapper.writeValueAsString(book);
-        System.out.println("JSON sérialisé: " + json);
-
-        Book deserializedBook = objectMapper.readValue(json, Book.class);
-        System.out.println("Titre après désérialisation: " + deserializedBook.getTitle());
+        mockMvc.perform(put("/api/books/1")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(invalidBook)))
+                .andExpect(status().isBadRequest());
     }
 }

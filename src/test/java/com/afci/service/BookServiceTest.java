@@ -1,6 +1,12 @@
 package com.afci.service;
 
 import com.afci.data.Book;
+import com.afci.data.Category;
+import com.afci.data.Author;
+import com.afci.dto.BookDTO;
+import com.afci.dto.CategoryDTO;
+import com.afci.dto.EditorDTO;
+import com.afci.dto.AuthorDTO;
 import com.afci.repository.BookRepository;
 
 import org.junit.jupiter.api.BeforeEach;
@@ -15,8 +21,11 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 
 import java.util.Arrays;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -33,29 +42,55 @@ class BookServiceTest {
     private BookService bookService;
 
     private Book testBook;
+    private BookDTO testBookDTO;
+
+    // Méthode utilitaire pour convertir Book en BookDTO
+    private BookDTO convertToBookDTO(Book book) {
+        BookDTO dto = new BookDTO();
+        dto.setId(book.getId());
+        dto.setTitle(book.getTitle());
+        dto.setIsbn(book.getISBN());
+        dto.setDetail(book.getDetail());
+        dto.setPrice(book.getPrice());
+        dto.setStock(book.getStock());
+        dto.setPublishDate(book.getPublishDate());
+        dto.setRewardDate(book.getRewardDate());
+        return dto;
+    }
 
     @BeforeEach
     void setUp() {
         testBook = new Book("Test Book", "1234567890", "Test Detail", 29.99);
         testBook.setId(1L);
+
+        // Créer le DTO correspondant
+        testBookDTO = convertToBookDTO(testBook);
     }
 
     @Test
     void getAllBooks_shouldReturnAllBooks() {
         // Arrange
-        List<Book> expectedBooks = Arrays.asList(
+        List<Book> books = Arrays.asList(
                 testBook,
                 new Book("Test Book 2", "0987654321", "Test Detail 2", 19.99));
         Pageable pageable = PageRequest.of(0, 10);
-        Page<Book> expectedPage = new PageImpl<>(expectedBooks);
-        when(bookRepository.findAll(pageable)).thenReturn(expectedPage);
+        Page<Book> bookPage = new PageImpl<>(books);
+
+        // Convertir en liste de DTOs
+        List<BookDTO> expectedBookDTOs = books.stream()
+                .map(this::convertToBookDTO)
+                .collect(Collectors.toList());
+        Page<BookDTO> expectedDTOPage = new PageImpl<>(expectedBookDTOs, pageable, books.size());
+
+        when(bookRepository.findAll(pageable)).thenReturn(bookPage);
 
         // Act
-        Page<Book> actualPage = bookService.getAllBooks(pageable);
+        Page<BookDTO> actualPage = bookService.getAllBooks(pageable);
 
         // Assert
         assertThat(actualPage.getContent()).hasSize(2);
-        assertThat(actualPage.getContent()).isEqualTo(expectedBooks);
+        assertThat(actualPage.getContent().get(0).getTitle()).isEqualTo("Test Book");
+        assertThat(actualPage.getContent().get(1).getTitle()).isEqualTo("Test Book 2");
         verify(bookRepository).findAll(pageable);
     }
 
@@ -65,7 +100,7 @@ class BookServiceTest {
         when(bookRepository.findById(1L)).thenReturn(Optional.of(testBook));
 
         // Act
-        Optional<Book> result = bookService.getBookById(1L);
+        Optional<BookDTO> result = bookService.getBookById(1L);
 
         // Assert
         assertThat(result).isPresent();
@@ -79,7 +114,7 @@ class BookServiceTest {
         when(bookRepository.findById(99L)).thenReturn(Optional.empty());
 
         // Act
-        Optional<Book> result = bookService.getBookById(99L);
+        Optional<BookDTO> result = bookService.getBookById(99L);
 
         // Assert
         assertThat(result).isEmpty();
@@ -107,6 +142,7 @@ class BookServiceTest {
         Book bookToUpdate = testBook;
         bookToUpdate.setTitle("Updated Title");
         when(bookRepository.existsById(1L)).thenReturn(true);
+        when(bookRepository.findById(1L)).thenReturn(Optional.of(testBook));
         when(bookRepository.save(any(Book.class))).thenReturn(bookToUpdate);
 
         // Act
@@ -115,7 +151,7 @@ class BookServiceTest {
         // Assert
         assertThat(updatedBook.getTitle()).isEqualTo("Updated Title");
         verify(bookRepository).existsById(1L);
-        verify(bookRepository).save(bookToUpdate);
+        verify(bookRepository).save(any(Book.class));
     }
 
     @Test
@@ -136,12 +172,18 @@ class BookServiceTest {
     void findBooksByTitle_shouldReturnMatchingBooks() {
         // Arrange
         String searchTitle = "Test";
-        List<Book> expectedBooks = Arrays.asList(testBook);
+        List<Book> books = Arrays.asList(testBook);
+
+        // Convertir en DTOs
+        List<BookDTO> expectedBookDTOs = books.stream()
+                .map(this::convertToBookDTO)
+                .collect(Collectors.toList());
+
         when(bookRepository.findByTitleContainingIgnoreCase(searchTitle))
-                .thenReturn(expectedBooks);
+                .thenReturn(books);
 
         // Act
-        List<Book> foundBooks = bookService.findBooksByTitle(searchTitle);
+        List<BookDTO> foundBooks = bookService.findBooksByTitle(searchTitle);
 
         // Assert
         assertThat(foundBooks).hasSize(1);
@@ -153,11 +195,17 @@ class BookServiceTest {
     void findBooksByCategory_shouldReturnBooksInCategory() {
         // Arrange
         String category = "Fiction";
-        List<Book> expectedBooks = Arrays.asList(testBook);
-        when(bookRepository.findByCategory_Name(category)).thenReturn(expectedBooks);
+        List<Book> books = Arrays.asList(testBook);
+
+        // Convertir en DTOs
+        List<BookDTO> expectedBookDTOs = books.stream()
+                .map(this::convertToBookDTO)
+                .collect(Collectors.toList());
+
+        when(bookRepository.findByCategory_Name(category)).thenReturn(books);
 
         // Act
-        List<Book> foundBooks = bookService.findBooksByCategory(category);
+        List<BookDTO> foundBooks = bookService.findBooksByCategory(category);
 
         // Assert
         assertThat(foundBooks).hasSize(1);
@@ -169,12 +217,18 @@ class BookServiceTest {
         // Arrange
         String lastName = "Doe";
         String firstName = "John";
-        List<Book> expectedBooks = Arrays.asList(testBook);
+        List<Book> books = Arrays.asList(testBook);
+
+        // Convertir en DTOs
+        List<BookDTO> expectedBookDTOs = books.stream()
+                .map(this::convertToBookDTO)
+                .collect(Collectors.toList());
+
         when(bookRepository.findByAuthor_LastNameContainingIgnoreCaseOrAuthor_FirstNameContainingIgnoreCase(
-                lastName, firstName)).thenReturn(expectedBooks);
+                lastName, firstName)).thenReturn(books);
 
         // Act
-        List<Book> foundBooks = bookService.findByAuthorName(lastName, firstName);
+        List<BookDTO> foundBooks = bookService.findByAuthorName(lastName, firstName);
 
         // Assert
         assertThat(foundBooks).hasSize(1);
@@ -187,6 +241,7 @@ class BookServiceTest {
     void deleteBook_shouldCallRepositoryDelete() {
         // Arrange
         Long bookId = 1L;
+        when(bookRepository.findById(bookId)).thenReturn(Optional.of(testBook));
 
         // Act
         bookService.deleteBook(bookId);
