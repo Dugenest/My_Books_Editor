@@ -46,7 +46,8 @@ public class CategoryService {
                 try {
                     if (category.getBooks() != null) {
                         logger.fine("Initialisation des livres pour la catégorie " + category.getName());
-                        category.getBooks().size();
+                        Category initializedCategory = categoryRepository.initializeBooks(category.getId());
+                        category.setBooks(initializedCategory.getBooks());
                     }
                 } catch (Exception e) {
                     logger.warning("Erreur lors de l'initialisation des livres pour la catégorie " + category.getId() + ": " + e.getMessage());

@@ -4,6 +4,8 @@ import java.util.List;
 import java.util.Optional;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -32,8 +34,8 @@ public class OrderController {
     @GetMapping("/{id}")
     public ResponseEntity<Order> getOrderById(@PathVariable Long id) {
         return orderService.getOrderById(id)
-            .map(ResponseEntity::ok)
-            .orElse(ResponseEntity.notFound().build());
+                .map(ResponseEntity::ok)
+                .orElse(ResponseEntity.notFound().build());
     }
 
     @PostMapping
@@ -54,22 +56,22 @@ public class OrderController {
     }
 
     @GetMapping("/customer/{customerId}")
-    public ResponseEntity<List<Order>> getCustomerOrders(@PathVariable Long customerId) {
+    public ResponseEntity<Page<Order>> getCustomerOrders(@PathVariable Long customerId) {
         return ResponseEntity.ok(orderService.getCustomerOrders(customerId));
     }
 
     @PostMapping("/basket/{customerId}/{basketId}")
     public ResponseEntity<Order> createOrderFromBasket(
-            @PathVariable Long customerId, 
+            @PathVariable Long customerId,
             @PathVariable Long basketId) {
         return new ResponseEntity<>(
-            orderService.createOrderFromBasket(customerId, basketId), 
-            HttpStatus.CREATED);
+                orderService.createOrderFromBasket(customerId, basketId),
+                HttpStatus.CREATED);
     }
 
     @PutMapping("/{id}/status")
     public ResponseEntity<Order> updateOrderStatus(
-            @PathVariable Long id, 
+            @PathVariable Long id,
             @RequestParam OrderStatus status) {
         return ResponseEntity.ok(orderService.updateOrderStatus(id, status));
     }
@@ -77,5 +79,18 @@ public class OrderController {
     @PutMapping("/{id}/cancel")
     public ResponseEntity<Order> cancelOrder(@PathVariable Long id) {
         return ResponseEntity.ok(orderService.cancelOrder(id));
+    }
+
+    // J'ai modifié ce endpoint pour utiliser /user/{userId} au lieu de /{userId}
+    @GetMapping("/user/{userId}")
+    public ResponseEntity<Page<Order>> getUserOrders(
+            @PathVariable Long userId,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size) {
+
+        // Récupérer les commandes paginées
+        Page<Order> orders = orderService.findOrdersByUser(userId, PageRequest.of(page, size));
+
+        return ResponseEntity.ok(orders);
     }
 }

@@ -28,6 +28,9 @@ public class Editor implements Serializable {
     @Column(name = "company")
     private String company;
 
+    @Column(name = "description")
+    private String description;
+
     @JsonIgnore
     @OneToMany(mappedBy = "editor", cascade = CascadeType.ALL)
     private Set<Book> books = new HashSet<>();
@@ -66,6 +69,14 @@ public class Editor implements Serializable {
 
     public void setCompany(String company) {
         this.company = company;
+    }
+
+    public String getDescription() {
+        return description;
+    }
+
+    public void setDescription(String description) {
+        this.description = description;
     }
 
     // Méthodes utilitaires

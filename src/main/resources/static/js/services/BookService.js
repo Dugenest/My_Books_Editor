@@ -6,19 +6,31 @@ const USE_MOCK_DATA_ON_ERROR = true;
 
 class BookService {
     // Récupérer tous les livres avec pagination
-    async getBooks(page = 0, size = 10, sort = 'title,asc') {
+    async getBooks(page = 0, size = 10) {
         try {
-            console.log('📚 Tentative de récupération des livres depuis l\'API...');
-            const response = await api.get(`/books?page=${page}&size=${size}&sort=${sort}`);
-            console.log('✅ Livres récupérés avec succès depuis l\'API');
-            return response.data;
+            console.log('📚 Tentative de récupération des livres avec params:', { page, size });
+            const response = await api.get(`/books?page=${page}&size=${size}`);
+            console.log('✅ Données des livres récupérées avec succès:', response.data);
+            
+            // Vérifier la structure de la réponse
+            if (response.data && response.data.content) {
+                return response.data;
+            } else {
+                console.warn('⚠️ Structure de réponse inattendue:', response.data);
+                return {
+                    content: [],
+                    totalElements: 0,
+                    totalPages: 0,
+                    size: size,
+                    number: page
+                };
+            }
         } catch (error) {
             console.error('❌ Erreur lors de la récupération des livres:', error);
             
             // Solution de secours en utilisant fetch
             try {
-                console.log('🔄 Tentative de récupération des livres avec fetch comme solution de secours');
-                const response = await fetch(`${api.defaults.baseURL}/books?page=${page}&size=${size}&sort=${sort}`, {
+                const response = await fetch(`${api.defaults.baseURL}/books?page=${page}&size=${size}`, {
                     method: 'GET',
                     headers: {
                         'Authorization': `Bearer ${localStorage.getItem('token')}`,
@@ -29,13 +41,6 @@ class BookService {
                 
                 if (!response.ok) {
                     console.error(`❌ Échec de la solution de secours fetch pour livres: ${response.status}`);
-                    
-                    // Utiliser les données fictives si activé
-                    if (USE_MOCK_DATA_ON_ERROR) {
-                        console.log('🧪 Utilisation des données fictives pour les livres');
-                        return MockDataService.getBooks(page, size);
-                    }
-                    
                     return {
                         content: [],
                         totalElements: 0,
@@ -49,14 +54,6 @@ class BookService {
                 return data;
             } catch (fetchError) {
                 console.error('❌ Échec complet de la récupération des livres:', fetchError);
-                
-                // Utiliser les données fictives si activé
-                if (USE_MOCK_DATA_ON_ERROR) {
-                    console.log('🧪 Utilisation des données fictives pour les livres');
-                    return MockDataService.getBooks(page, size);
-                }
-                
-                // Retourner une structure par défaut en cas d'erreur pour éviter les erreurs en cascade
                 return {
                     content: [],
                     totalElements: 0,

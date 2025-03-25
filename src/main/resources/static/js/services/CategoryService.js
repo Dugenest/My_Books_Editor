@@ -11,7 +11,20 @@ class CategoryService {
             console.log('📂 Tentative de récupération des catégories depuis l\'API...');
             const response = await api.get(`/categories?page=${page}&size=${size}`);
             console.log('✅ Catégories récupérées avec succès:', response.data);
-            return response.data;
+            
+            // Vérifier la structure de la réponse
+            if (response.data && response.data.content) {
+                return response.data;
+            } else {
+                console.warn('⚠️ Structure de réponse inattendue:', response.data);
+                return {
+                    content: [],
+                    totalElements: 0,
+                    totalPages: 0,
+                    size: size,
+                    number: page
+                };
+            }
         } catch (error) {
             console.error('❌ Erreur détaillée lors de la récupération des catégories:', error);
             console.error('❌ Erreur serveur 500 - Vérifiez les logs du backend');

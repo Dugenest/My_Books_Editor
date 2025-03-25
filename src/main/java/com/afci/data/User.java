@@ -13,6 +13,8 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 @Entity
 @Table(name = "users")
 @Inheritance(strategy = InheritanceType.JOINED)
+@DiscriminatorColumn(name = "user_type", discriminatorType = DiscriminatorType.STRING, length = 31)
+@DiscriminatorValue("USER")
 public class User implements Serializable {
 
     private static final long serialVersionUID = 1L;

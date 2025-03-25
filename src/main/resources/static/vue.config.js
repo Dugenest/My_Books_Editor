@@ -10,7 +10,10 @@ module.exports = defineConfig({
       '/api': {
         target: 'http://localhost:8111',
         changeOrigin: true,
-        logLevel: 'debug'
+        logLevel: 'debug',
+        pathRewrite: {
+          '^/api': '/api' // Conserver le préfixe /api
+        }
       }
     }
   },

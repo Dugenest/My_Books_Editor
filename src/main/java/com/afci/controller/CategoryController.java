@@ -30,7 +30,6 @@ import jakarta.validation.Valid;
 @RestController
 @RequestMapping("/api/categories")
 @Tag(name = "Category Management", description = "Category operations")
-@CrossOrigin(origins = "*", allowedHeaders = "*", methods = {RequestMethod.GET, RequestMethod.POST, RequestMethod.PUT, RequestMethod.DELETE})
 public class CategoryController {
 
     @Autowired

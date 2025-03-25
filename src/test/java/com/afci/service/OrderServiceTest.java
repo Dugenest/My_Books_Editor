@@ -14,6 +14,9 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
 
 import com.afci.data.Order;
 import com.afci.data.OrderStatus;
@@ -98,13 +101,13 @@ public class OrderServiceTest {
 
     @Test
     void findOrdersByUser_ShouldReturnUserOrders() {
-        List<Order> orders = Arrays.asList(order);
-        when(orderRepository.findByUserId(1L)).thenReturn(orders);
+        Page<Order> orderPage = new PageImpl<>(Arrays.asList(order));
+        when(orderRepository.findByUserId(eq(1L), any(PageRequest.class))).thenReturn(orderPage);
 
-        List<Order> result = orderService.findOrdersByUser(1L);
+        Page<Order> result = orderService.findOrdersByUser(1L, PageRequest.of(0, 10));
 
         assertNotNull(result);
-        assertEquals(1, result.size());
+        assertEquals(1, result.getContent().size());
     }
 
     @Test

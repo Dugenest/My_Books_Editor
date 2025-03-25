@@ -39,14 +39,14 @@ public class JwtProvider {
                 .claim("roles", roles)
                 .setIssuedAt(new Date())
                 .setExpiration(new Date(new Date().getTime() + jwtExpiration))
-                .signWith(Keys.hmacShaKeyFor(jwtSecret.getBytes(StandardCharsets.UTF_8)))
+                .signWith(getSigningKey())
                 .compact();
     }
     
     public boolean validateToken(String token) {
         try {
             Jwts.parserBuilder()
-                .setSigningKey(Keys.hmacShaKeyFor(jwtSecret.getBytes(StandardCharsets.UTF_8)))
+                .setSigningKey(getSigningKey())
                 .build()
                 .parseClaimsJws(token);
             return true;
@@ -60,7 +60,7 @@ public class JwtProvider {
     
     public String getUsernameFromJWT(String token) {
         Claims claims = Jwts.parserBuilder()
-                .setSigningKey(Keys.hmacShaKeyFor(jwtSecret.getBytes(StandardCharsets.UTF_8)))
+                .setSigningKey(getSigningKey())
                 .build()
                 .parseClaimsJws(token)
                 .getBody();
@@ -70,7 +70,7 @@ public class JwtProvider {
     
     public List<GrantedAuthority> getAuthoritiesFromJWT(String token) {
         Claims claims = Jwts.parserBuilder()
-                .setSigningKey(Keys.hmacShaKeyFor(jwtSecret.getBytes(StandardCharsets.UTF_8)))
+                .setSigningKey(getSigningKey())
                 .build()
                 .parseClaimsJws(token)
                 .getBody();
@@ -91,5 +91,9 @@ public class JwtProvider {
         }
         
         return authorities;
+    }
+
+    private java.security.Key getSigningKey() {
+        return Keys.hmacShaKeyFor(jwtSecret.getBytes(StandardCharsets.UTF_8));
     }
 }

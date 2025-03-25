@@ -3,8 +3,7 @@ import axios from 'axios';
 // Fonction pour obtenir l'URL de base en fonction de l'environnement
 function getBaseURL() {
     if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
-        // Spécifier explicitement le port du backend Spring Boot (8111)
-        return `http://localhost:8111/api`;
+        return 'http://localhost:8111/api';
     }
     return '/api'; // En production, utiliser un chemin relatif
 }

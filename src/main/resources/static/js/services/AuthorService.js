@@ -6,10 +6,10 @@ const USE_MOCK_DATA_ON_ERROR = true;
 
 class AuthorService {
     // Récupérer tous les auteurs
-    async getAllAuthors() {
+    async getAllAuthors(page = 0, size = 10) {
         try {
             console.log('👤 Tentative de récupération des auteurs depuis l\'API...');
-            const response = await api.get('/authors');
+            const response = await api.get(`/authors?page=${page}&size=${size}`);
             console.log('✅ Auteurs récupérés avec succès');
             return response.data;
         } catch (error) {
@@ -18,7 +18,7 @@ class AuthorService {
             // Solution de secours en utilisant fetch
             try {
                 console.log('🔄 Tentative de récupération avec fetch comme solution de secours');
-                const response = await fetch(`${api.defaults.baseURL}/authors`, {
+                const response = await fetch(`${api.defaults.baseURL}/authors?page=${page}&size=${size}`, {
                     method: 'GET',
                     headers: {
                         'Authorization': `Bearer ${localStorage.getItem('token')}`,
@@ -36,7 +36,13 @@ class AuthorService {
                         return MockDataService.getAuthors();
                     }
                     
-                    return [];
+                    return {
+                        content: [],
+                        totalElements: 0,
+                        totalPages: 0,
+                        size: size,
+                        number: page
+                    };
                 }
                 
                 const data = await response.json();
@@ -50,8 +56,14 @@ class AuthorService {
                     return MockDataService.getAuthors();
                 }
                 
-                // Retourner un tableau vide en cas d'erreur pour éviter les erreurs en cascade
-                return [];
+                // Retourner un objet de pagination vide
+                return {
+                    content: [],
+                    totalElements: 0,
+                    totalPages: 0,
+                    size: size,
+                    number: page
+                };
             }
         }
     }

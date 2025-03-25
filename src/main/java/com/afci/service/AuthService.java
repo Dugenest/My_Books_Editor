@@ -170,17 +170,6 @@ public class AuthService {
     }
     
     /**
-     * Génère un token JWT pour l'authentification
-     */
-    private String generateJwtToken(User user) {
-        // En production, vous devriez utiliser une bibliothèque JWT comme jjwt
-        // Pour l'instant, un token simple basé sur l'ID et un timestamp
-        return Base64.getEncoder().encodeToString(
-            (user.getId() + ":" + user.getEmail() + ":" + System.currentTimeMillis()).getBytes()
-        );
-    }
-    
-    /**
      * Génère un token pour la confirmation d'email
      * En production, ce token devrait être stocké en base de données avec une date d'expiration
      */

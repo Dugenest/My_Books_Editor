@@ -60,16 +60,16 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             // Traitement normal des tokens JWT
             if (StringUtils.hasText(jwt) && tokenProvider.validateToken(jwt)) {
                 try {
-                    String username = tokenProvider.getUsernameFromJWT(jwt);
+                    String email = tokenProvider.getUsernameFromJWT(jwt);
                     
-                    // Vérifier si username est null ou vide
-                    if (username == null || username.isEmpty()) {
-                        logger.warn("Username extrait du token est null ou vide");
+                    // Vérifier si email est null ou vide
+                    if (email == null || email.isEmpty()) {
+                        logger.warn("Email extrait du token est null ou vide");
                         filterChain.doFilter(request, response);
                         return;
                     }
                     
-                    UserDetails userDetails = userDetailsService.loadUserByUsername(username);
+                    UserDetails userDetails = userDetailsService.loadUserByUsername(email);
                     
                     UsernamePasswordAuthenticationToken authentication = new UsernamePasswordAuthenticationToken(
                             userDetails, null, userDetails.getAuthorities());

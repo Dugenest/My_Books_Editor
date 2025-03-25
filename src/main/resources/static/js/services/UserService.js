@@ -4,13 +4,13 @@ import MockDataService from './MockDataService';
 // Option de configuration pour activer les données fictives en cas d'erreur
 const USE_MOCK_DATA_ON_ERROR = true;
 
-class EditorService {
-    // Récupérer tous les éditeurs
-    async getEditors(page = 0, size = 10) {
+class UserService {
+    // Récupérer tous les utilisateurs avec pagination
+    async getUsers(page = 0, size = 10) {
         try {
-            console.log('EditorService: Tentative de récupération des éditeurs...');
-            const response = await api.get(`/editors?page=${page}&size=${size}`);
-            console.log('EditorService: Réponse brute:', response);
+            console.log('🔍 Tentative de récupération des utilisateurs avec params:', { page, size });
+            const response = await api.get(`/users?page=${page}&size=${size}`);
+            console.log('✅ Données des utilisateurs récupérées avec succès:', response.data);
             
             // Vérifier la structure de la réponse
             if (response.data && response.data.content) {
@@ -26,11 +26,11 @@ class EditorService {
                 };
             }
         } catch (error) {
-            console.error('❌ Erreur lors de la récupération des éditeurs:', error);
+            console.error('❌ Erreur lors de la récupération des utilisateurs:', error);
             
             // Solution de secours en utilisant fetch
             try {
-                const response = await fetch(`${api.defaults.baseURL}/editors?page=${page}&size=${size}`, {
+                const response = await fetch(`${api.defaults.baseURL}/users?page=${page}&size=${size}`, {
                     method: 'GET',
                     headers: {
                         'Authorization': `Bearer ${localStorage.getItem('token')}`,
@@ -40,7 +40,7 @@ class EditorService {
                 });
                 
                 if (!response.ok) {
-                    console.error(`❌ Échec de la solution de secours fetch pour éditeurs: ${response.status}`);
+                    console.error(`❌ Échec de la solution de secours fetch pour utilisateurs: ${response.status}`);
                     return {
                         content: [],
                         totalElements: 0,
@@ -53,7 +53,7 @@ class EditorService {
                 const data = await response.json();
                 return data;
             } catch (fetchError) {
-                console.error('❌ Échec complet de la récupération des éditeurs:', fetchError);
+                console.error('❌ Échec complet de la récupération des utilisateurs:', fetchError);
                 return {
                     content: [],
                     totalElements: 0,
@@ -65,60 +65,59 @@ class EditorService {
         }
     }
 
-    // Récupérer un éditeur par ID
-    async getEditorById(id) {
+    // Récupérer un utilisateur par ID
+    async getUserById(id) {
         try {
-            const response = await api.get(`/editors/${id}`);
+            const response = await api.get(`/users/${id}`);
             return response.data;
         } catch (error) {
-            console.error(`EditorService: Erreur lors de la récupération de l'éditeur ${id}:`, error);
+            console.error(`UserService: Erreur lors de la récupération de l'utilisateur ${id}:`, error);
             throw error;
         }
     }
 
-    // Créer un nouvel éditeur
-    async createEditor(editor) {
+    // Créer un nouvel utilisateur
+    async createUser(user) {
         try {
-            const response = await api.post('/editors', editor);
+            const response = await api.post('/users', user);
             return response.data;
         } catch (error) {
-            console.error('EditorService: Erreur lors de la création de l\'éditeur:', error);
+            console.error('UserService: Erreur lors de la création de l\'utilisateur:', error);
             throw error;
         }
     }
 
-    // Mettre à jour un éditeur
-    async updateEditor(id, editor) {
+    // Mettre à jour un utilisateur
+    async updateUser(id, user) {
         try {
-            const response = await api.put(`/editors/${id}`, editor);
+            const response = await api.put(`/users/${id}`, user);
             return response.data;
         } catch (error) {
-            console.error(`EditorService: Erreur lors de la mise à jour de l'éditeur ${id}:`, error);
+            console.error(`UserService: Erreur lors de la mise à jour de l'utilisateur ${id}:`, error);
             throw error;
         }
     }
 
-    // Supprimer un éditeur
-    async deleteEditor(id) {
+    // Supprimer un utilisateur
+    async deleteUser(id) {
         try {
-            await api.delete(`/editors/${id}`);
+            await api.delete(`/users/${id}`);
         } catch (error) {
-            console.error(`EditorService: Erreur lors de la suppression de l'éditeur ${id}:`, error);
+            console.error(`UserService: Erreur lors de la suppression de l'utilisateur ${id}:`, error);
             throw error;
         }
     }
 
-    // Récupérer les livres d'un éditeur
-    async getEditorBooks(id) {
+    // Récupérer l'utilisateur courant
+    async getCurrentUser() {
         try {
-            const response = await api.get(`/editors/${id}/books`);
+            const response = await api.get('/users/me');
             return response.data;
         } catch (error) {
-            console.error(`EditorService: Erreur lors de la récupération des livres de l'éditeur ${id}:`, error);
-            // Retourner un tableau vide en cas d'erreur
-            return [];
+            console.error('UserService: Erreur lors de la récupération de l\'utilisateur courant:', error);
+            throw error;
         }
     }
 }
 
-export default new EditorService(); 
+export default new UserService(); 

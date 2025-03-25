@@ -77,6 +77,7 @@ public class BookService {
 
         // Conversion de l'éditeur
         if (book.getEditor() != null) {
+            logger.debug("Conversion de l'éditeur pour le livre: {}", book.getTitle());
             EditorDTO editorDTO = new EditorDTO();
             editorDTO.setId(book.getEditor().getId());
             editorDTO.setCompany(book.getEditor().getCompany());
@@ -85,7 +86,7 @@ public class BookService {
 
         // Conversion des catégories
         if (book.getCategories() != null) {
-            logger.debug("Initialisation des catégories pour le livre: {}", book.getTitle());
+            logger.debug("Conversion des catégories pour le livre: {}", book.getTitle());
             Set<CategoryDTO> categoryDTOs = book.getCategories().stream()
                     .map(this::convertCategoryToDTO)
                     .collect(Collectors.toSet());
@@ -94,7 +95,7 @@ public class BookService {
 
         // Conversion des auteurs
         if (book.getAuthors() != null) {
-            logger.debug("Initialisation des auteurs pour le livre: {}", book.getTitle());
+            logger.debug("Conversion des auteurs pour le livre: {}", book.getTitle());
             Set<AuthorDTO> authorDTOs = book.getAuthors().stream()
                     .map(this::convertAuthorToDTO)
                     .collect(Collectors.toSet());
@@ -106,6 +107,7 @@ public class BookService {
 
     // Méthode de conversion de Category en CategoryDTO
     private CategoryDTO convertCategoryToDTO(Category category) {
+        logger.debug("Conversion de la catégorie en DTO: {}", category.getName());
         CategoryDTO dto = new CategoryDTO();
         dto.setId(category.getId());
         dto.setName(category.getName());
@@ -115,23 +117,18 @@ public class BookService {
         return dto;
     }
 
-   // Méthode de conversion de Author en AuthorDTO
-private AuthorDTO convertAuthorToDTO(Author author) {
-    AuthorDTO dto = new AuthorDTO();
-    dto.setId(author.getId());  // Utilise getId() de User hérité par Author
-    
-    // Les méthodes getFirstName() et getLastName() sont héritées de User
-    dto.setFirstName(author.getFirstName());
-    dto.setLastName(author.getLastName());
-    
-    // C'est authorNationality, pas nationality
-    dto.setNationality(author.getAuthorNationality());
-    
-    dto.setBiography(author.getBiography());
-    dto.setBirthDate(author.getBirthDate());
-    
-    return dto;
-}
+    // Méthode de conversion de Author en AuthorDTO
+    private AuthorDTO convertAuthorToDTO(Author author) {
+        logger.debug("Conversion de l'auteur en DTO: {} {}", author.getFirstName(), author.getLastName());
+        AuthorDTO dto = new AuthorDTO();
+        dto.setId(author.getId());
+        dto.setFirstName(author.getFirstName());
+        dto.setLastName(author.getLastName());
+        dto.setNationality(author.getAuthorNationality());
+        dto.setBiography(author.getBiography());
+        dto.setBirthDate(author.getBirthDate());
+        return dto;
+    }
 
     /**
      * Recherche un livre par son identifiant.

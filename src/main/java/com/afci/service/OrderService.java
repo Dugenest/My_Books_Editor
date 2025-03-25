@@ -4,6 +4,9 @@ import java.util.List;
 import java.util.Optional;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -41,18 +44,18 @@ public class OrderService {
         orderRepository.deleteById(id);
     }
 
-    public List<Order> findOrdersByUser(Long userId) {
-        return orderRepository.findByUserId(userId);
+    public Page<Order> findOrdersByUser(Long userId, PageRequest pageRequest) {
+        return orderRepository.findByUserId(userId, pageRequest);
     }
 
-    public List<Order> getCustomerOrders(Long customerId) {
-        return orderRepository.findByUserId(customerId);
+    public Page<Order> getCustomerOrders(Long customerId) {
+        return orderRepository.findByUserId(customerId, PageRequest.of(0, Integer.MAX_VALUE));
     }
 
     public Order createOrderFromBasket(Long customerId, Long basketId) {
         Order newOrder = new Order();
-        newOrder.setCustomerId(customerId);  
-        newOrder.setBasketId(basketId);      
+        newOrder.setCustomerId(customerId);
+        newOrder.setBasketId(basketId);
         newOrder.setStatus(OrderStatus.PENDING);
         return orderRepository.save(newOrder);
     }
@@ -77,6 +80,14 @@ public class OrderService {
         } else {
             throw new RuntimeException("Commande non trouvée avec l'ID : " + id);
         }
+    }
+
+    public long countByUserId(Long userId) {
+        return orderRepository.countByUserId(userId);
+    }
+
+    public long countBooksByUserId(Long userId) {
+        return orderRepository.countBooksByUserId(userId);
     }
 
 }

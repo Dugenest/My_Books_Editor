@@ -51,7 +51,7 @@
             <td>{{ book.title }}</td>
             <td>{{ book.isbn }}</td>
             <td>{{ getAuthorName(book) }}</td>
-            <td>{{ book.editor?.name || 'Non spécifié' }}</td>
+            <td>{{ book.editor?.company || 'Non spécifié' }}</td>
             <td>{{ book.price ? formatPrice(book.price) : 'Non défini' }}</td>
             <td>{{ book.stock }}</td>
             <td class="action-buttons">
@@ -177,7 +177,7 @@
                       :key="editor.id" 
                       :value="{ id: editor.id }"
                     >
-                      {{ editor.name }}
+                      {{ editor.company }}
                     </option>
                   </select>
                 </div>
@@ -307,7 +307,7 @@
                 </p>
                 <p v-if="selectedBook.editor">
                   <strong>Éditeur:</strong> 
-                  {{ selectedBook.editor.name }}
+                  {{ selectedBook.editor.company }}
                 </p>
                 <p>
                   <strong>ISBN:</strong> 
@@ -410,28 +410,31 @@ export default {
     
     async loadAuthors() {
       try {
-        const response = await AuthorService.getAllAuthors();
-        this.authors = response;
+        const response = await AuthorService.getAllAuthors(0, 100);
+        this.authors = response.content || response;
       } catch (error) {
         console.error('Erreur lors du chargement des auteurs', error);
+        this.authors = [];
       }
     },
     
     async loadEditors() {
       try {
-        const response = await EditorService.getAllEditors();
-        this.editors = response;
+        const response = await EditorService.getEditors(0, 100);
+        this.editors = response.content || response;
       } catch (error) {
         console.error('Erreur lors du chargement des éditeurs', error);
+        this.editors = [];
       }
     },
     
     async loadCategories() {
       try {
-        const response = await CategoryService.getCategories();
-        this.categories = response;
+        const response = await CategoryService.getAllCategories(0, 100);
+        this.categories = response.content || response;
       } catch (error) {
         console.error('Erreur lors du chargement des catégories', error);
+        this.categories = [];
       }
     },
     

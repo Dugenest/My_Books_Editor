@@ -22,25 +22,67 @@ class MockDataService {
     }
 
     // Auteurs factices
-    getAuthors() {
-        return [
-            { id: 1, firstName: "Victor", lastName: "Hugo", authorNationality: "Française", birthDate: "1802-02-26" },
-            { id: 2, firstName: "Jules", lastName: "Verne", authorNationality: "Française", birthDate: "1828-02-08" },
-            { id: 3, firstName: "Agatha", lastName: "Christie", authorNationality: "Britannique", birthDate: "1890-09-15" },
-            { id: 4, firstName: "J.K.", lastName: "Rowling", authorNationality: "Britannique", birthDate: "1965-07-31" },
-            { id: 5, firstName: "Stephen", lastName: "King", authorNationality: "Américaine", birthDate: "1947-09-21" }
+    getAuthors(page = 0, size = 10) {
+        const authors = [
+            {
+                id: 1,
+                firstName: "Victor",
+                lastName: "Hugo",
+                nationality: "Français",
+                biography: "Écrivain romantique français",
+                birthDate: "1802-02-26"
+            },
+            {
+                id: 2,
+                firstName: "Charles",
+                lastName: "Baudelaire",
+                nationality: "Français",
+                biography: "Poète français",
+                birthDate: "1821-04-09"
+            }
         ];
+
+        // Simuler la pagination
+        const startIndex = page * size;
+        const endIndex = Math.min(startIndex + size, authors.length);
+        const pagedAuthors = authors.slice(startIndex, endIndex);
+
+        return {
+            content: pagedAuthors,
+            totalElements: authors.length,
+            totalPages: Math.ceil(authors.length / size),
+            size: size,
+            number: page
+        };
     }
 
     // Éditeurs factices
-    getEditors() {
-        return [
-            { id: 1, company: "Gallimard" },
-            { id: 2, company: "Hachette" },
-            { id: 3, company: "Flammarion" },
-            { id: 4, company: "Albin Michel" },
-            { id: 5, company: "Le Seuil" }
+    getEditors(page = 0, size = 10) {
+        const editors = [
+            {
+                id: 1,
+                company: "Gallimard",
+                description: "Éditeur français"
+            },
+            {
+                id: 2,
+                company: "Flammarion",
+                description: "Éditeur français"
+            }
         ];
+
+        // Simuler la pagination
+        const startIndex = page * size;
+        const endIndex = Math.min(startIndex + size, editors.length);
+        const pagedEditors = editors.slice(startIndex, endIndex);
+
+        return {
+            content: pagedEditors,
+            totalElements: editors.length,
+            totalPages: Math.ceil(editors.length / size),
+            size: size,
+            number: page
+        };
     }
 
     // Livres factices

@@ -10,6 +10,8 @@ import org.springframework.stereotype.Service;
 
 import jakarta.transaction.Transactional;
 import jakarta.validation.Valid;
+import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 @Service
@@ -24,7 +26,57 @@ public class UserService {
 
     // Récupérer tous les utilisateurs
     public Iterable<User> getAllUsers() {
-        return userRepository.findAll();
+        try {
+            // Requête SQL native directe qui évite le mécanisme de discrimination
+            List<Map<String, Object>> rawUsers = userRepository.findAllUsersRaw();
+            List<User> users = new java.util.ArrayList<>();
+            
+            for (Map<String, Object> rawUser : rawUsers) {
+                try {
+                    User user = new User();
+                    user.setId(((Number) rawUser.get("id")).longValue());
+                    user.setUsername((String) rawUser.get("username"));
+                    // Ne pas définir le mot de passe pour des raisons de sécurité
+                    user.setEmail((String) rawUser.get("email"));
+                    user.setFirstName((String) rawUser.get("first_name"));
+                    user.setLastName((String) rawUser.get("last_name"));
+                    
+                    // Gérer les valeurs potentiellement nulles
+                    Boolean subscribedToNewsletter = (Boolean) rawUser.get("subscribed_to_newsletter");
+                    user.setSubscribedToNewsletter(subscribedToNewsletter != null ? subscribedToNewsletter : false);
+                    
+                    user.setPhone((String) rawUser.get("phone"));
+                    user.setAddress((String) rawUser.get("address"));
+                    user.setRole((String) rawUser.get("role"));
+                    user.setRegistrationDate((java.util.Date) rawUser.get("registration_date"));
+                    
+                    Boolean active = (Boolean) rawUser.get("active");
+                    user.setActive(active != null ? active : true);
+                    
+                    users.add(user);
+                } catch (Exception e) {
+                    // Log l'erreur mais continue avec les autres utilisateurs
+                    System.err.println("Erreur lors de la conversion d'un utilisateur brut: " + e.getMessage());
+                }
+            }
+            
+            System.out.println("Nombre d'utilisateurs récupérés: " + users.size());
+            return users;
+        } catch (Exception e) {
+            System.err.println("Erreur lors de la récupération des utilisateurs: " + e.getMessage());
+            e.printStackTrace();
+            
+            // Dernière tentative avec JPQL directe
+            try {
+                List<User> users = userRepository.findAllValidUsers();
+                System.out.println("Nombre d'utilisateurs récupérés via JPQL: " + users.size());
+                return users;
+            } catch (Exception e2) {
+                System.err.println("Erreur avec la requête JPQL: " + e2.getMessage());
+                e2.printStackTrace();
+                return new java.util.ArrayList<>(); // Retourner une liste vide en dernier recours
+            }
+        }
     }
 
     // Récupérer un utilisateur par ID
@@ -140,5 +192,15 @@ public class UserService {
         } else {
             throw new RuntimeException("Le mot de passe actuel est incorrect");
         }
+    }
+
+    public User findByEmail(String email) {
+        return userRepository.findByEmail(email)
+            .orElseThrow(() -> new RuntimeException("Utilisateur non trouvé avec l'email : " + email));
+    }
+
+    public User findByUsername(String username) {
+        return userRepository.findByUsername(username)
+                .orElseThrow(() -> new RuntimeException("Utilisateur non trouvé avec le nom d'utilisateur: " + username));
     }
 }

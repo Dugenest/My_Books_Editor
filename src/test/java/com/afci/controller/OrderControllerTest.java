@@ -14,6 +14,8 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 
@@ -95,14 +97,14 @@ public class OrderControllerTest {
 
     @Test
     void getCustomerOrders_ShouldReturnOrders() {
-        List<Order> orders = Arrays.asList(order);
-        when(orderService.getCustomerOrders(1L)).thenReturn(orders);
+        Page<Order> orderPage = new PageImpl<>(Arrays.asList(order));
+        when(orderService.getCustomerOrders(1L)).thenReturn(orderPage);
 
-        ResponseEntity<List<Order>> response = orderController.getCustomerOrders(1L);
+        ResponseEntity<Page<Order>> response = orderController.getCustomerOrders(1L);
 
         assertEquals(HttpStatus.OK, response.getStatusCode());
         assertNotNull(response.getBody());
-        assertEquals(1, response.getBody().size());
+        assertEquals(1, response.getBody().getContent().size());
     }
 
     @Test
