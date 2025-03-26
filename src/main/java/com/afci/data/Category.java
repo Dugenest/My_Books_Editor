@@ -24,7 +24,8 @@ public class Category implements Serializable {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+    @Column(name = "category_id")
+    private Long category_id;
 
     @NotBlank(message = "Le nom de la catégorie est obligatoire")
     @Size(min = 2, max = 50, message = "Le nom doit contenir entre 2 et 50 caractères")
@@ -62,11 +63,11 @@ public class Category implements Serializable {
 
     // Getters et Setters
     public Long getId() {
-        return id;
+        return category_id;
     }
 
     public void setId(Long id) {
-        this.id = id;
+        this.category_id = id;
     }
 
     public String getName() {
@@ -131,7 +132,7 @@ public class Category implements Serializable {
         if (!(o instanceof Category))
             return false;
         Category category = (Category) o;
-        return id != null && id.equals(category.getId());
+        return category_id != null && category_id.equals(category.getId());
     }
 
     @Override
@@ -142,7 +143,7 @@ public class Category implements Serializable {
     @Override
     public String toString() {
         return "Category{" +
-                "id=" + id +
+                "id=" + category_id +
                 ", name='" + name + '\'' +
                 ", description='"
                 + (description != null ? description.substring(0, Math.min(description.length(), 50)) + "..." : "null")

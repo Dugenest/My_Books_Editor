@@ -23,6 +23,7 @@ public class Editor implements Serializable {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "editor_id")
     private Long id;
 
     @Column(name = "company")

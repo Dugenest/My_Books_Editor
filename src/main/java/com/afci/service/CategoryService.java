@@ -16,6 +16,7 @@ import java.util.logging.Logger;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
+import java.util.ArrayList;
 
 @Service
 @Transactional
@@ -27,13 +28,15 @@ public class CategoryService {
     private CategoryRepository categoryRepository;
 
     public List<Category> getAllCategories() {
-        List<Category> categories = categoryRepository.findAll();
-        // Initialiser manuellement la collection books pour éviter les erreurs de proxy
-        categories.forEach(category -> {
-            // Forcer l'initialisation de la collection lazy
-            category.getBooks().size();
-        });
-        return categories;
+        try {
+            List<Category> categories = categoryRepository.findAll();
+            // Ne pas initialiser manuellement les collections pour éviter les erreurs de proxy
+            return categories;
+        } catch (Exception e) {
+            logger.severe("Erreur lors de la récupération des catégories sans pagination: " + e.getMessage());
+            e.printStackTrace();
+            return new ArrayList<>();
+        }
     }
 
     public Page<Category> getAllCategories(Pageable pageable) {
@@ -41,23 +44,13 @@ public class CategoryService {
             logger.info("Récupération de toutes les catégories avec pagination: " + pageable);
             Page<Category> categories = categoryRepository.findAll(pageable);
             
-            // Initialiser les collections pour éviter les erreurs de proxy
-            categories.getContent().forEach(category -> {
-                try {
-                    if (category.getBooks() != null) {
-                        logger.fine("Initialisation des livres pour la catégorie " + category.getName());
-                        category.getBooks().size();
-                    }
-                } catch (Exception e) {
-                    logger.warning("Erreur lors de l'initialisation des livres pour la catégorie " + category.getId() + ": " + e.getMessage());
-                }
-            });
+            // Ne pas initialiser les collections pour éviter les erreurs de proxy
             
             return categories;
         } catch (Exception e) {
             logger.severe("Erreur lors de la récupération des catégories avec pagination: " + e.getMessage());
             e.printStackTrace();
-            throw e;
+            return Page.empty(pageable);
         }
     }
 

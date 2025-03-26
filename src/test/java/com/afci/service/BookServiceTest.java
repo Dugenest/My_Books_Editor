@@ -1,13 +1,16 @@
 package com.afci.service;
 
-import com.afci.data.Book;
-import com.afci.data.Category;
-import com.afci.data.Author;
-import com.afci.dto.BookDTO;
-import com.afci.dto.CategoryDTO;
-import com.afci.dto.EditorDTO;
-import com.afci.dto.AuthorDTO;
-import com.afci.repository.BookRepository;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
+
+import java.util.Arrays;
+import java.util.List;
+import java.util.Optional;
+import java.util.stream.Collectors;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -20,17 +23,9 @@ import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 
-import java.util.Arrays;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Optional;
-import java.util.Set;
-import java.util.stream.Collectors;
-
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.*;
+import com.afci.data.Book;
+import com.afci.dto.BookDTO;
+import com.afci.repository.BookRepository;
 
 @ExtendWith(MockitoExtension.class)
 class BookServiceTest {

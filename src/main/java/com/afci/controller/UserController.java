@@ -3,6 +3,8 @@ package com.afci.controller;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
 
 import com.afci.data.PasswordChangeRequest;
@@ -103,4 +105,16 @@ public class UserController {
                 ));
         }
     }
+
+    @GetMapping("/me")
+public ResponseEntity<?> getCurrentUser(@AuthenticationPrincipal UserDetails userDetails) {
+    // Récupérer l'utilisateur authentifié par son nom d'utilisateur
+    String username = userDetails.getUsername();
+    User user = userService.findByUsername(username);
+    if (user == null) {
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).body("User not found");
+    }
+    // Retourner les informations de l'utilisateur
+    return ResponseEntity.ok(user);
+}
 }

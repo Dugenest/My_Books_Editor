@@ -29,6 +29,7 @@ import java.util.Set;
 import java.util.stream.Collectors;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import java.util.ArrayList;
 
 @Service
 @Transactional
@@ -62,46 +63,79 @@ public class BookService {
 
     // Méthode de conversion de Book en BookDTO
     private BookDTO convertToDTO(Book book) {
-        logger.debug("Conversion du livre en DTO: {}", book.getTitle());
-        BookDTO dto = new BookDTO();
+        try {
+            logger.debug("Début conversion du livre en DTO: {}", book.getTitle());
+            BookDTO dto = new BookDTO();
 
-        dto.setId(book.getId());
-        dto.setTitle(book.getTitle());
-        dto.setIsbn(book.getISBN());
-        dto.setDetail(book.getDetail());
-        dto.setPrice(book.getPrice());
-        dto.setStock(book.getStock());
-        dto.setPicture(book.getPicture());
-        dto.setPublishDate(book.getPublishDate());
-        dto.setRewardDate(book.getRewardDate());
+            dto.setId(book.getId());
+            dto.setTitle(book.getTitle());
+            dto.setIsbn(book.getISBN());
+            dto.setDetail(book.getDetail());
+            dto.setPrice(book.getPrice());
+            dto.setStock(book.getStock());
+            dto.setPicture(book.getPicture());
+            dto.setPublishDate(book.getPublishDate());
+            dto.setRewardDate(book.getRewardDate());
 
-        // Conversion de l'éditeur
-        if (book.getEditor() != null) {
-            EditorDTO editorDTO = new EditorDTO();
-            editorDTO.setId(book.getEditor().getId());
-            editorDTO.setCompany(book.getEditor().getCompany());
-            dto.setEditor(editorDTO);
+            // Conversion de l'éditeur
+            if (book.getEditor() != null) {
+                try {
+                    logger.debug("Conversion de l'éditeur: {}", book.getEditor().getCompany());
+                    EditorDTO editorDTO = new EditorDTO();
+                    editorDTO.setId(book.getEditor().getId());
+                    editorDTO.setCompany(book.getEditor().getCompany());
+                    dto.setEditor(editorDTO);
+                } catch (Exception e) {
+                    logger.error("Erreur lors de la conversion de l'éditeur", e);
+                }
+            }
+
+            // Conversion des catégories
+            if (book.getCategories() != null) {
+                try {
+                    logger.debug("Conversion des catégories pour le livre: {}", book.getTitle());
+                    Set<CategoryDTO> categoryDTOs = new HashSet<>();
+                    for (Category category : book.getCategories()) {
+                        try {
+                            CategoryDTO categoryDTO = convertCategoryToDTO(category);
+                            categoryDTOs.add(categoryDTO);
+                        } catch (Exception e) {
+                            logger.error("Erreur lors de la conversion d'une catégorie", e);
+                        }
+                    }
+                    dto.setCategories(categoryDTOs);
+                } catch (Exception e) {
+                    logger.error("Erreur lors de la conversion des catégories", e);
+                    dto.setCategories(new HashSet<>());
+                }
+            }
+
+            // Conversion des auteurs
+            if (book.getAuthors() != null) {
+                try {
+                    logger.debug("Conversion des auteurs pour le livre: {}", book.getTitle());
+                    Set<AuthorDTO> authorDTOs = new HashSet<>();
+                    for (Author author : book.getAuthors()) {
+                        try {
+                            AuthorDTO authorDTO = convertAuthorToDTO(author);
+                            authorDTOs.add(authorDTO);
+                        } catch (Exception e) {
+                            logger.error("Erreur lors de la conversion d'un auteur", e);
+                        }
+                    }
+                    dto.setAuthors(authorDTOs);
+                } catch (Exception e) {
+                    logger.error("Erreur lors de la conversion des auteurs", e);
+                    dto.setAuthors(new HashSet<>());
+                }
+            }
+
+            logger.debug("Fin conversion du livre en DTO: {}", book.getTitle());
+            return dto;
+        } catch (Exception e) {
+            logger.error("Erreur majeure lors de la conversion du livre en DTO", e);
+            throw e;
         }
-
-        // Conversion des catégories
-        if (book.getCategories() != null) {
-            logger.debug("Initialisation des catégories pour le livre: {}", book.getTitle());
-            Set<CategoryDTO> categoryDTOs = book.getCategories().stream()
-                    .map(this::convertCategoryToDTO)
-                    .collect(Collectors.toSet());
-            dto.setCategories(categoryDTOs);
-        }
-
-        // Conversion des auteurs
-        if (book.getAuthors() != null) {
-            logger.debug("Initialisation des auteurs pour le livre: {}", book.getTitle());
-            Set<AuthorDTO> authorDTOs = book.getAuthors().stream()
-                    .map(this::convertAuthorToDTO)
-                    .collect(Collectors.toSet());
-            dto.setAuthors(authorDTOs);
-        }
-
-        return dto;
     }
 
     // Méthode de conversion de Category en CategoryDTO
@@ -342,9 +376,36 @@ private AuthorDTO convertAuthorToDTO(Author author) {
      * @return Une liste des derniers livres publiés
      */
     public List<BookDTO> getNewReleases(int limit) {
-        Pageable pageable = PageRequest.of(0, limit, Sort.by("publishDate").descending());
-        List<Book> books = bookRepository.findAll(pageable).getContent();
-        return books.stream().map(this::convertToDTO).collect(Collectors.toList());
+        try {
+            logger.info("Récupération des nouvelles parutions, limite: {}", limit);
+            
+            // Récupération des livres avec pagination
+            logger.debug("Création du Pageable pour les nouvelles parutions");
+            Pageable pageable = PageRequest.of(0, limit, Sort.by("publishDate").descending());
+            
+            logger.debug("Appel à bookRepository.findAll avec pageable");
+            List<Book> books = bookRepository.findAll(pageable).getContent();
+            logger.info("Nombre de livres récupérés: {}", books.size());
+            
+            // Conversion en DTO
+            logger.debug("Conversion des livres en DTO");
+            List<BookDTO> dtos = new ArrayList<>();
+            for (Book book : books) {
+                try {
+                    logger.debug("Conversion du livre en DTO: {}", book.getTitle());
+                    BookDTO dto = convertToDTO(book);
+                    dtos.add(dto);
+                } catch (Exception e) {
+                    logger.error("Erreur lors de la conversion du livre en DTO: {}", book.getTitle(), e);
+                }
+            }
+            
+            logger.info("Nombre de DTOs créés: {}", dtos.size());
+            return dtos;
+        } catch (Exception e) {
+            logger.error("Erreur lors de la récupération des nouvelles parutions", e);
+            return new ArrayList<>();
+        }
     }
 
     /**
@@ -354,10 +415,29 @@ private AuthorDTO convertAuthorToDTO(Author author) {
      * @return Une liste des livres les plus populaires
      */
     public List<BookDTO> getPopularBooks(int limit) {
-        // Pour l'instant, on retourne simplement les premiers livres
-        Pageable pageable = PageRequest.of(0, limit);
-        List<Book> books = bookRepository.findAll(pageable).getContent();
-        return books.stream().map(this::convertToDTO).collect(Collectors.toList());
+        try {
+            // Pour l'instant, on retourne simplement les premiers livres
+            Pageable pageable = PageRequest.of(0, limit);
+            List<Book> books = bookRepository.findAll(pageable).getContent();
+            return books.stream().map(this::convertToDTO).collect(Collectors.toList());
+        } catch (Exception e) {
+            logger.error("Erreur lors de la récupération des livres populaires", e);
+            return new ArrayList<>();
+        }
+    }
+
+    /**
+     * Récupère les recommandations pour l'utilisateur
+     * (pour le moment, on utilise la même logique que pour les livres populaires)
+     */
+    public List<BookDTO> getRecommendations(int limit) {
+        try {
+            logger.info("Récupération des recommandations (utilise getPopularBooks), limite: {}", limit);
+            return getPopularBooks(limit);
+        } catch (Exception e) {
+            logger.error("Erreur lors de la récupération des recommandations", e);
+            return new ArrayList<>();
+        }
     }
 
     // Méthodes pour gérer les auteurs

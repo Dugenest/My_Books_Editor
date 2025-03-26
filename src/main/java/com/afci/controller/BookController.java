@@ -1,6 +1,6 @@
 package com.afci.controller;
 
-import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
@@ -15,7 +15,6 @@ import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
-import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -23,7 +22,6 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -46,8 +44,6 @@ import jakarta.validation.Valid;
 @RequestMapping("/api/books")
 @Validated
 @Tag(name = "Book Management", description = "APIs pour la gestion des livres")
-@CrossOrigin(origins = "*", allowedHeaders = "*", methods = { RequestMethod.GET, RequestMethod.POST, RequestMethod.PUT,
-        RequestMethod.DELETE })
 public class BookController {
 
     private static final Logger logger = LoggerFactory.getLogger(BookController.class);
@@ -63,12 +59,11 @@ public class BookController {
     @GetMapping("/new-releases")
     public ResponseEntity<?> getNewReleases(@RequestParam(defaultValue = "10") int limit) {
         try {
-            List<BookDTO> newReleases = bookService.getNewReleases(limit);
-            return ResponseEntity.ok(newReleases);
+            logger.info("Récupération des nouvelles parutions, limite: {}", limit);
+            return ResponseEntity.ok(bookService.getNewReleases(limit));
         } catch (Exception e) {
             logger.error("Erreur lors de la récupération des nouvelles parutions", e);
-            // Retourner une liste vide en cas d'erreur temporaire
-            return ResponseEntity.ok(new ArrayList<>());
+            return ResponseEntity.ok(Collections.emptyList());
         }
     }
 
@@ -80,18 +75,17 @@ public class BookController {
     @GetMapping("/popular")
     public ResponseEntity<?> getPopularBooks(@RequestParam(defaultValue = "10") int limit) {
         try {
-            List<BookDTO> popularBooks = bookService.getPopularBooks(limit);
-            return ResponseEntity.ok(popularBooks);
+            logger.info("Récupération des livres populaires, limite: {}", limit);
+            return ResponseEntity.ok(bookService.getPopularBooks(limit));
         } catch (Exception e) {
             logger.error("Erreur lors de la récupération des livres populaires", e);
-            // Retourner une liste vide en cas d'erreur temporaire
-            return ResponseEntity.ok(new ArrayList<>());
+            return ResponseEntity.ok(Collections.emptyList());
         }
     }
 
     @Operation(summary = "Get all books")
     @GetMapping
-    public ResponseEntity<Page<BookDTO>> getAllBooks(
+    public ResponseEntity<?> getAllBooks(
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size,
             @RequestParam(defaultValue = "id") String sortBy) {
@@ -101,7 +95,8 @@ public class BookController {
             return ResponseEntity.ok(books);
         } catch (Exception ex) {
             logger.error("Erreur lors de la récupération des livres", ex);
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+            // Retourner une page vide en cas d'erreur
+            return ResponseEntity.ok(Page.empty());
         }
     }
 
@@ -305,6 +300,22 @@ public class BookController {
             logger.error("Erreur lors de la suppression de la catégorie " + categoryId + " du livre " + bookId, e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body(new ErrorResponse("Erreur lors de la suppression de la catégorie : " + e.getMessage()));
+        }
+    }
+
+    @Operation(summary = "Récupérer les recommandations de livres")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Recommandations récupérées avec succès"),
+            @ApiResponse(responseCode = "404", description = "Aucune recommandation trouvée")
+    })
+    @GetMapping("/recommendations")
+    public ResponseEntity<?> getRecommendations(@RequestParam(defaultValue = "10") int limit) {
+        try {
+            logger.info("Récupération des recommandations, limite: {}", limit);
+            return ResponseEntity.ok(bookService.getRecommendations(limit));
+        } catch (Exception e) {
+            logger.error("Erreur lors de la récupération des recommandations", e);
+            return ResponseEntity.ok(Collections.emptyList());
         }
     }
 

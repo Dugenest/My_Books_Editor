@@ -33,9 +33,19 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     private UserDetailsService userDetailsService;
     
     @Override
+    protected boolean shouldNotFilter(HttpServletRequest request) {
+        // Ne pas filtrer les requêtes OPTIONS ni les requêtes d'authentification
+        String method = request.getMethod();
+        String path = request.getServletPath();
+        return "OPTIONS".equals(method) || path.startsWith("/api/auth/");
+    }
+    
+    @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) 
             throws ServletException, IOException {
         try {
+            logger.debug("Traitement de la requête: {} {}", request.getMethod(), request.getRequestURI());
+            
             String jwt = getJwtFromRequest(request);
             
             logger.debug("JWT reçu: {}", jwt != null ? jwt.substring(0, Math.min(10, jwt != null ? jwt.length() : 0)) + "..." : "null");

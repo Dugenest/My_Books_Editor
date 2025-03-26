@@ -6,7 +6,6 @@ import java.util.Optional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -46,34 +45,27 @@ public class AdministratorController {
                 .orElseGet(() -> ResponseEntity.notFound().build());
     }
 
-
     @Operation(summary = "Create administrator")
     @PostMapping
     public ResponseEntity<Administrator> createAdministrator(
-        @Parameter(description = "Administrator details") 
-        @Valid @RequestBody Administrator administrator
-    ) {
+            @Parameter(description = "Administrator details") @Valid @RequestBody Administrator administrator) {
         return new ResponseEntity<>(
-            administratorService.createAdministrator(administrator), 
-            HttpStatus.CREATED
-        );
+                administratorService.createAdministrator(administrator),
+                HttpStatus.CREATED);
     }
 
     @Operation(summary = "Update administrator")
     @PutMapping("/{id}")
     public ResponseEntity<Administrator> updateAdministrator(
-        @Parameter(description = "Administrator ID") @PathVariable Long id,
-        @Parameter(description = "Administrator details") 
-        @Valid @RequestBody Administrator administrator
-    ) {
+            @Parameter(description = "Administrator ID") @PathVariable Long id,
+            @Parameter(description = "Administrator details") @Valid @RequestBody Administrator administrator) {
         return ResponseEntity.ok(administratorService.updateAdministrator(administrator));
     }
 
     @Operation(summary = "Delete administrator")
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteAdministrator(
-        @Parameter(description = "Administrator ID") @PathVariable Long id
-    ) {
+            @Parameter(description = "Administrator ID") @PathVariable Long id) {
         administratorService.deleteAdministrator(id);
         return ResponseEntity.noContent().build();
     }

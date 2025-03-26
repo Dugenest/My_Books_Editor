@@ -2,12 +2,12 @@ package com.afci.data;
 
 import java.io.Serializable;
 import java.time.LocalDate;
-import java.util.Date;
 import java.util.HashSet;
 import java.util.Set;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
@@ -31,12 +31,14 @@ import jakarta.validation.constraints.Pattern;
 
 @Entity
 @Table(name = "books")
+@JsonIgnoreProperties({ "hibernateLazyInitializer", "handler" })
 public class Book implements Serializable {
 
     private static final long serialVersionUID = 1L;
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "id")
     private Long id;
 
     @NotBlank(message = "Le titre est obligatoire")
@@ -69,12 +71,12 @@ public class Book implements Serializable {
     @Temporal(TemporalType.DATE)
     private LocalDate publishDate;
 
-    @JsonIgnore
+    @JsonIgnoreProperties("books")
     @ManyToOne
     @JoinColumn(name = "author_id")
     private Author author;
 
-    @JsonIgnore
+    @JsonIgnoreProperties("books")
     @ManyToOne
     @JoinColumn(name = "editor_id")
     private Editor editor;

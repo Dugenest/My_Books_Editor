@@ -1,14 +1,21 @@
 package com.afci.service;
 
 import java.util.Base64;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.authentication.BadCredentialsException;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
@@ -18,14 +25,10 @@ import com.afci.data.User;
 import com.afci.repository.UserRepository;
 import com.afci.security.JwtProvider;
 
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.GrantedAuthority;
-import org.springframework.security.core.authority.SimpleGrantedAuthority;
-import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
-import java.util.Collections;
-
 @Service
 public class AuthService {
+
+    private static final Logger logger = LoggerFactory.getLogger(AuthService.class);
 
     @Autowired
     private UserRepository userRepository;
@@ -79,19 +82,32 @@ public class AuthService {
      * Méthode pour connecter un utilisateur
      */
     public Map<String, Object> login(LoginRequest request) {
+        logger.info("Tentative de connexion pour l'email: {}", request.getEmail());
+        
         // Rechercher l'utilisateur par email
         Optional<User> userOpt = userRepository.findByEmail(request.getEmail());
         
-        if (userOpt.isEmpty() || !passwordEncoder.matches(request.getPassword(), userOpt.get().getPassword())) {
+        if (userOpt.isEmpty()) {
+            logger.warn("Échec de connexion: Utilisateur non trouvé pour l'email {}", request.getEmail());
             throw new BadCredentialsException("Email ou mot de passe incorrect");
         }
         
         User user = userOpt.get();
+        logger.debug("Utilisateur trouvé: ID={}, Email={}, Active={}", user.getId(), user.getEmail(), user.isActive());
+        
+        // Vérifier le mot de passe
+        if (!passwordEncoder.matches(request.getPassword(), user.getPassword())) {
+            logger.warn("Échec de connexion: Mot de passe incorrect pour l'email {}", request.getEmail());
+            throw new BadCredentialsException("Email ou mot de passe incorrect");
+        }
         
         // Vérifier si le compte est actif
         if (!user.isActive()) {
+            logger.warn("Échec de connexion: Compte inactif pour l'email {}", request.getEmail());
             throw new RuntimeException("Veuillez confirmer votre compte en cliquant sur le lien envoyé par email");
         }
+        
+        logger.info("Authentification réussie pour l'utilisateur: {}", user.getEmail());
         
         // Créer un objet UserDetails pour l'authentification
         List<GrantedAuthority> authorities = Collections.singletonList(
@@ -114,6 +130,7 @@ public class AuthService {
         
         // Générer un token JWT avec JwtProvider
         String token = jwtProvider.generateToken(authentication);
+        logger.debug("Token JWT généré pour l'utilisateur: {}", user.getEmail());
         
         // Préparer la réponse
         Map<String, Object> response = new HashMap<>();

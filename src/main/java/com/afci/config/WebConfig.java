@@ -16,7 +16,7 @@ public class WebConfig implements WebMvcConfigurer {
     @Bean
     public ObjectMapper objectMapper() {
         Hibernate5JakartaModule hibernate5Module = new Hibernate5JakartaModule();
-        // C onfigure le module Hibernate pour gérer les collections lazy
+        // Configure le module Hibernate pour gérer les collections lazy
         hibernate5Module.configure(Hibernate5JakartaModule.Feature.FORCE_LAZY_LOADING, false);
 
         return Jackson2ObjectMapperBuilder.json()
