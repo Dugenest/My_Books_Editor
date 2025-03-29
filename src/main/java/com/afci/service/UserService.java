@@ -11,6 +11,7 @@ import org.springframework.stereotype.Service;
 import jakarta.transaction.Transactional;
 import jakarta.validation.Valid;
 import java.util.Optional;
+import java.util.Map;
 
 @Service
 @Transactional
@@ -30,6 +31,12 @@ public class UserService {
     // Récupérer un utilisateur par ID
     public Optional<User> getUserById(Long id) {
         return userRepository.findById(id);
+    }
+
+    // Récupérer un utilisateur par email
+    public User getUserByEmail(String email) {
+        return userRepository.findByEmail(email)
+                .orElseThrow(() -> new RuntimeException("Utilisateur non trouvé avec l'email: " + email));
     }
 
     // Créer un nouvel utilisateur
@@ -55,41 +62,50 @@ public class UserService {
         if (user.getUsername() != null) {
             existingUser.setUsername(user.getUsername());
         }
-        
+
         if (user.getEmail() != null) {
             existingUser.setEmail(user.getEmail());
         }
-        
+
         if (user.getFirstName() != null) {
             existingUser.setFirstName(user.getFirstName());
         }
-        
+
         if (user.getLastName() != null) {
             existingUser.setLastName(user.getLastName());
         }
-        
+
         if (user.getPhone() != null) {
             existingUser.setPhone(user.getPhone());
         }
-        
+
         if (user.getAddress() != null) {
             existingUser.setAddress(user.getAddress());
         }
-        
+
         if (user.getRole() != null) {
             existingUser.setRole(user.getRole());
         }
-        
+
+        // Mettre à jour les nouveaux champs
+        if (user.getNationality() != null) {
+            existingUser.setNationality(user.getNationality());
+        }
+
+        if (user.getBirth_date() != null) {
+            existingUser.setBirth_date(user.getBirth_date());
+        }
+
         // Gérer le mot de passe séparément
         if (user.getPassword() != null && !user.getPassword().isEmpty()
                 && !user.getPassword().equals(existingUser.getPassword())) {
             existingUser.setPassword(passwordEncoder.encode(user.getPassword()));
         }
-        
+
         // Mettre à jour les champs booléens
         existingUser.setActive(user.isActive());
         existingUser.setSubscribedToNewsletter(user.isSubscribedToNewsletter());
-        
+
         // Conserver la date d'enregistrement si elle existe déjà
         if (existingUser.getRegistrationDate() == null && user.getRegistrationDate() != null) {
             existingUser.setRegistrationDate(user.getRegistrationDate());
@@ -104,21 +120,23 @@ public class UserService {
         if (!userRepository.existsById(id)) {
             throw new RuntimeException("Utilisateur non trouvé");
         }
-        
+
         // Récupérer l'utilisateur pour vérifier s'il a des relations
         User user = userRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Utilisateur non trouvé"));
-        
+
         // Vérifier si l'utilisateur a des livres associés
         if (user.getBooks() != null && !user.getBooks().isEmpty()) {
-            throw new RuntimeException("Impossible de supprimer l'utilisateur car il a des livres associés. Veuillez d'abord supprimer ou réassigner ces livres.");
+            throw new RuntimeException(
+                    "Impossible de supprimer l'utilisateur car il a des livres associés. Veuillez d'abord supprimer ou réassigner ces livres.");
         }
-        
+
         // Vérifier si l'utilisateur a des commandes associées
         if (user.getOrders() != null && !user.getOrders().isEmpty()) {
-            throw new RuntimeException("Impossible de supprimer l'utilisateur car il a des commandes associées. Veuillez d'abord supprimer ces commandes.");
+            throw new RuntimeException(
+                    "Impossible de supprimer l'utilisateur car il a des commandes associées. Veuillez d'abord supprimer ces commandes.");
         }
-        
+
         userRepository.deleteById(id);
     }
 

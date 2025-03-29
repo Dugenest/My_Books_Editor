@@ -65,6 +65,9 @@ public class User implements Serializable {
     @Column(name = "subscribed_to_newsletter")
     private boolean subscribedToNewsletter;
 
+    private Date birth_date;
+    private String nationality;
+    private String avatar;
     private String phone;
     private String address;
     private String role;
@@ -150,6 +153,30 @@ public class User implements Serializable {
     public void setSubscribedToNewsletter(boolean subscribedToNewsletter) {
         this.subscribedToNewsletter = subscribedToNewsletter;
     }
+
+    public Date getBirth_date() {
+        return birth_date;
+    }
+
+    public void setBirth_date(Date birth_date) {
+        this.birth_date = birth_date;
+    }   
+
+    public String getNationality() {
+        return nationality;
+    }
+
+    public void setNationality(String nationality) {
+        this.nationality = nationality;
+    }   
+
+    public String getAvatar() {
+        return avatar;
+    }
+
+    public void setAvatar(String avatar) {
+        this.avatar = avatar;
+    }   
 
     public String getPhone() {
         return phone;
@@ -289,6 +316,12 @@ public class User implements Serializable {
                 ", firstName='" + firstName + '\'' +
                 ", lastName='" + lastName + '\'' +
                 ", active=" + active +
+                ", birth_date=" + birth_date +
+                ", nationality=" + nationality +
+                ", avatar=" + avatar +
+                ", phone=" + phone +
+                ", address=" + address +
+                ", role=" + role +
                 ", numberOfBooks=" + (books != null ? books.size() : 0) +
                 ", numberOfOrders=" + (orders != null ? orders.size() : 0) +
                 '}';
