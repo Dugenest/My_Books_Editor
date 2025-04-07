@@ -75,8 +75,8 @@ public class UserControllerTest {
     @Test
     void updateUser_ShouldReturnUpdatedUser() {
         when(userService.updateUser(eq(1L), any(User.class))).thenReturn(user);
-
-        ResponseEntity<Object> response = userController.updateUser(1L, user);
+        
+        ResponseEntity<Object> response = userController.updateUserJson(1L, user);
 
         assertEquals(HttpStatus.OK, response.getStatusCode());
         assertNotNull(response.getBody());

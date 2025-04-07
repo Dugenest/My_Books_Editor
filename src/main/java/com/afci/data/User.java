@@ -9,8 +9,6 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
-import jakarta.persistence.DiscriminatorColumn;
-import jakarta.persistence.DiscriminatorType;
 import jakarta.persistence.DiscriminatorValue;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
@@ -158,9 +156,13 @@ public class User implements Serializable {
         return birth_date;
     }
 
-    public void setBirth_date(Date birth_date) {
-        this.birth_date = birth_date;
-    }   
+    public void setBirth_date(Long birth_date) {
+        if (birth_date != null) {
+            this.birth_date = new Date(birth_date);
+        } else {
+            this.birth_date = null;
+        }
+    }
 
     public String getNationality() {
         return nationality;
@@ -168,7 +170,7 @@ public class User implements Serializable {
 
     public void setNationality(String nationality) {
         this.nationality = nationality;
-    }   
+    }
 
     public String getAvatar() {
         return avatar;
@@ -176,7 +178,7 @@ public class User implements Serializable {
 
     public void setAvatar(String avatar) {
         this.avatar = avatar;
-    }   
+    }
 
     public String getPhone() {
         return phone;

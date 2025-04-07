@@ -13,6 +13,8 @@ import com.afci.repository.CategoryRepository;
 import com.afci.repository.AuthorRepository;
 import com.afci.repository.EditorRepository;
 
+import jakarta.persistence.EntityNotFoundException;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -149,23 +151,23 @@ public class BookService {
         return dto;
     }
 
-   // Méthode de conversion de Author en AuthorDTO
-private AuthorDTO convertAuthorToDTO(Author author) {
-    AuthorDTO dto = new AuthorDTO();
-    dto.setId(author.getId());  // Utilise getId() de User hérité par Author
-    
-    // Les méthodes getFirstName() et getLastName() sont héritées de User
-    dto.setFirstName(author.getFirstName());
-    dto.setLastName(author.getLastName());
-    
-    // C'est authorNationality, pas nationality
-    dto.setNationality(author.getAuthorNationality());
-    
-    dto.setBiography(author.getBiography());
-    dto.setBirthDate(author.getBirthDate());
-    
-    return dto;
-}
+    // Méthode de conversion de Author en AuthorDTO
+    private AuthorDTO convertAuthorToDTO(Author author) {
+        AuthorDTO dto = new AuthorDTO();
+        dto.setId(author.getId()); // Utilise getId() de User hérité par Author
+
+        // Les méthodes getFirstName() et getLastName() sont héritées de User
+        dto.setFirstName(author.getFirstName());
+        dto.setLastName(author.getLastName());
+
+        // C'est authorNationality, pas nationality
+        dto.setNationality(author.getAuthorNationality());
+
+        dto.setBiography(author.getBiography());
+        dto.setBirthDate(author.getBirthDate());
+
+        return dto;
+    }
 
     /**
      * Recherche un livre par son identifiant.
@@ -302,6 +304,15 @@ private AuthorDTO convertAuthorToDTO(Author author) {
         return bookRepository.save(book);
     }
 
+    @Transactional
+    public void updateBookImage(Long bookId, String imagePath) {
+        Book book = bookRepository.findById(bookId)
+                .orElseThrow(() -> new EntityNotFoundException("Book not found with id: " + bookId));
+
+        book.setPicture(imagePath);
+        bookRepository.save(book);
+    }
+
     /**
      * Supprime un livre par son identifiant après avoir vérifié les dépendances.
      * 
@@ -378,15 +389,15 @@ private AuthorDTO convertAuthorToDTO(Author author) {
     public List<BookDTO> getNewReleases(int limit) {
         try {
             logger.info("Récupération des nouvelles parutions, limite: {}", limit);
-            
+
             // Récupération des livres avec pagination
             logger.debug("Création du Pageable pour les nouvelles parutions");
             Pageable pageable = PageRequest.of(0, limit, Sort.by("publishDate").descending());
-            
+
             logger.debug("Appel à bookRepository.findAll avec pageable");
             List<Book> books = bookRepository.findAll(pageable).getContent();
             logger.info("Nombre de livres récupérés: {}", books.size());
-            
+
             // Conversion en DTO
             logger.debug("Conversion des livres en DTO");
             List<BookDTO> dtos = new ArrayList<>();
@@ -399,7 +410,7 @@ private AuthorDTO convertAuthorToDTO(Author author) {
                     logger.error("Erreur lors de la conversion du livre en DTO: {}", book.getTitle(), e);
                 }
             }
-            
+
             logger.info("Nombre de DTOs créés: {}", dtos.size());
             return dtos;
         } catch (Exception e) {

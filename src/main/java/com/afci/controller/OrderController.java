@@ -37,8 +37,8 @@ public class OrderController {
     @GetMapping("/{id}")
     public ResponseEntity<Order> getOrderById(@PathVariable Long id) {
         return orderService.getOrderById(id)
-            .map(ResponseEntity::ok)
-            .orElse(ResponseEntity.notFound().build());
+                .map(ResponseEntity::ok)
+                .orElse(ResponseEntity.notFound().build());
     }
 
     @PostMapping
@@ -65,16 +65,16 @@ public class OrderController {
 
     @PostMapping("/basket/{customerId}/{basketId}")
     public ResponseEntity<Order> createOrderFromBasket(
-            @PathVariable Long customerId, 
+            @PathVariable Long customerId,
             @PathVariable Long basketId) {
         return new ResponseEntity<>(
-            orderService.createOrderFromBasket(customerId, basketId), 
-            HttpStatus.CREATED);
+                orderService.createOrderFromBasket(customerId, basketId),
+                HttpStatus.CREATED);
     }
 
     @PutMapping("/{id}/status")
     public ResponseEntity<Order> updateOrderStatus(
-            @PathVariable Long id, 
+            @PathVariable Long id,
             @RequestParam OrderStatus status) {
         return ResponseEntity.ok(orderService.updateOrderStatus(id, status));
     }
@@ -82,5 +82,11 @@ public class OrderController {
     @PutMapping("/{id}/cancel")
     public ResponseEntity<Order> cancelOrder(@PathVariable Long id) {
         return ResponseEntity.ok(orderService.cancelOrder(id));
+    }
+
+    @GetMapping("/user/{userId}")
+    public ResponseEntity<List<Order>> getUserOrders(@PathVariable Long userId) {
+        List<Order> orders = orderService.getCustomerOrders(userId);
+        return ResponseEntity.ok(orders);
     }
 }

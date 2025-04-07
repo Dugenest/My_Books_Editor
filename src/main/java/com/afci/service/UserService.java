@@ -7,11 +7,12 @@ import com.afci.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.web.multipart.MultipartFile;
 
 import jakarta.transaction.Transactional;
 import jakarta.validation.Valid;
+import java.io.IOException;
 import java.util.Optional;
-import java.util.Map;
 
 @Service
 @Transactional
@@ -22,6 +23,9 @@ public class UserService {
 
     @Autowired
     private PasswordEncoder passwordEncoder;
+
+    @Autowired
+    private FileService fileService;
 
     // Récupérer tous les utilisateurs
     public Iterable<User> getAllUsers() {
@@ -36,15 +40,26 @@ public class UserService {
     // Récupérer un utilisateur par email
     public User getUserByEmail(String email) {
         return userRepository.findByEmail(email)
-                .orElseThrow(() -> new RuntimeException("Utilisateur non trouvé avec l'email: " + email));
+                .orElseThrow(() -> new RuntimeException("Utilisateur non trouvé"));
     }
 
     // Créer un nouvel utilisateur
     public User createUser(@Valid User user) {
+        // Vérifier si l'adresse mail existe
+        if (userRepository.findByEmail(user.getEmail()).isPresent()) {
+            throw new RuntimeException("Un utilisateur avec cet email existe déjà");
+        }
+        
         // Hacher le mot de passe avant de sauvegarder
         if (user.getPassword() != null && !user.getPassword().isEmpty()) {
             user.setPassword(passwordEncoder.encode(user.getPassword()));
         }
+
+        // Définir l'avatar par défaut si aucun n'est fourni
+        if (user.getAvatar() == null || user.getAvatar().isEmpty()) {
+            user.setAvatar(fileService.getDefaultAvatarPath());
+        }
+
         return userRepository.save(user);
     }
 
@@ -93,7 +108,18 @@ public class UserService {
         }
 
         if (user.getBirth_date() != null) {
-            existingUser.setBirth_date(user.getBirth_date());
+            existingUser.setBirth_date(user.getBirth_date().getTime());
+        }
+
+        // Mettre à jour l'avatar si fourni et différent
+        if (user.getAvatar() != null && !user.getAvatar().isEmpty()
+                && !user.getAvatar().equals(existingUser.getAvatar())) {
+            // Si l'utilisateur avait déjà un avatar personnalisé, le supprimer
+            if (existingUser.getAvatar() != null &&
+                    !existingUser.getAvatar().equals(fileService.getDefaultAvatarPath())) {
+                fileService.deleteAvatar(existingUser.getAvatar());
+            }
+            existingUser.setAvatar(user.getAvatar());
         }
 
         // Gérer le mot de passe séparément
@@ -137,6 +163,11 @@ public class UserService {
                     "Impossible de supprimer l'utilisateur car il a des commandes associées. Veuillez d'abord supprimer ces commandes.");
         }
 
+        // Supprimer l'avatar si ce n'est pas l'avatar par défaut
+        if (user.getAvatar() != null && !user.getAvatar().equals(fileService.getDefaultAvatarPath())) {
+            fileService.deleteAvatar(user.getAvatar());
+        }
+
         userRepository.deleteById(id);
     }
 
@@ -164,5 +195,76 @@ public class UserService {
     public User findByUsername(String username) {
         return userRepository.findByUsername(username)
                 .orElseThrow(() -> new RuntimeException("Utilisateur non trouvé"));
+    }
+
+    /**
+     * Met à jour l'avatar d'un utilisateur
+     * 
+     * @param id         L'ID de l'utilisateur
+     * @param avatarFile Le fichier d'avatar
+     * @return L'utilisateur mis à jour
+     * @throws IOException si une erreur survient pendant le stockage du fichier
+     */
+    public User updateAvatar(Long id, MultipartFile avatarFile) throws IOException {
+        User user = userRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Utilisateur non trouvé"));
+
+        // Supprimer l'ancien avatar si ce n'est pas l'avatar par défaut
+        if (user.getAvatar() != null && !user.getAvatar().equals(fileService.getDefaultAvatarPath())) {
+            fileService.deleteAvatar(user.getAvatar());
+        }
+
+        // Stocker le nouvel avatar
+        String avatarPath = fileService.storeAvatar(avatarFile);
+        user.setAvatar(avatarPath);
+
+        return userRepository.save(user);
+    }
+
+    /**
+     * Réinitialise l'avatar d'un utilisateur à l'avatar par défaut
+     * 
+     * @param id L'ID de l'utilisateur
+     * @return L'utilisateur mis à jour
+     */
+    public User resetAvatar(Long id) {
+        User user = userRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Utilisateur non trouvé"));
+
+        // Supprimer l'ancien avatar s'il n'est pas déjà l'avatar par défaut
+        if (user.getAvatar() != null && !user.getAvatar().equals(fileService.getDefaultAvatarPath())) {
+            fileService.deleteAvatar(user.getAvatar());
+            // Définir l'avatar par défaut
+            user.setAvatar(fileService.getDefaultAvatarPath());
+            return userRepository.save(user);
+        }
+
+        return user; // Si l'avatar est déjà l'avatar par défaut, ne rien faire
+    }
+
+    // Sauvegarder l'avatar d'un utilisateur
+    public void saveAvatar(Long userId, byte[] avatarBytes, String fileName) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new RuntimeException("Utilisateur non trouvé"));
+
+        // Vous pouvez soit stocker l'avatar dans le système de fichiers
+        // soit le convertir en Base64 pour le stocker directement dans la base de
+        // données
+
+        // Option 1: Stockage en Base64 (solution simple pour démarrer)
+        String base64Avatar = java.util.Base64.getEncoder().encodeToString(avatarBytes);
+        user.setAvatar(base64Avatar);
+
+        // Option 2: Stockage dans le système de fichiers (à implémenter si nécessaire)
+        // Stocker le fichier et enregistrer le chemin dans user.setAvatar(filepath)
+
+        userRepository.save(user);
+    }
+
+    public User updateUserStatus(Long userId, boolean active) {
+        User user = getUserById(userId)
+                .orElseThrow(() -> new RuntimeException("Utilisateur non trouvé"));
+        user.setActive(active);
+        return userRepository.save(user);
     }
 }

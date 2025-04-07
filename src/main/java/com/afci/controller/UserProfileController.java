@@ -24,20 +24,18 @@ public class UserProfileController {
     @Operation(summary = "Get user profile")
     @GetMapping("/user/{userId}")
     public ResponseEntity<UserProfile> getUserProfile(
-        @Parameter(description = "User ID") @PathVariable Long userId
-    ) {
+            @Parameter(description = "User ID") @PathVariable Long userId) {
         return userProfileService.getUserProfileById(userId)
-            .map(ResponseEntity::ok)
-            .orElseGet(() -> ResponseEntity.status(HttpStatus.NOT_FOUND).build());
+                .map(ResponseEntity::ok)
+                .orElseGet(() -> ResponseEntity.status(HttpStatus.NOT_FOUND).build());
     }
 
     @Operation(summary = "Update user profile")
     @PutMapping("/user/{userId}")
     public ResponseEntity<UserProfile> updateUserProfile(
-        @Parameter(description = "User ID") @PathVariable Long userId,
-        @Parameter(description = "Profile details") @Valid @RequestBody UserProfile profile
-    ) {
-        profile.setId_profile(userId);  // S'assurer que l'ID est correct
+            @Parameter(description = "User ID") @PathVariable Long userId,
+            @Parameter(description = "Profile details") @Valid @RequestBody UserProfile profile) {
+        profile.setId_profile(userId); // S'assurer que l'ID est correct
         try {
             return ResponseEntity.ok(userProfileService.updateUserProfile(profile));
         } catch (Exception e) {
@@ -48,9 +46,8 @@ public class UserProfileController {
     @Operation(summary = "Update profile picture")
     @PutMapping("/user/{userId}/picture")
     public ResponseEntity<UserProfile> updateProfilePicture(
-        @Parameter(description = "User ID") @PathVariable Long userId,
-        @Parameter(description = "Profile picture") @RequestParam("file") MultipartFile picture
-    ) {
+            @Parameter(description = "User ID") @PathVariable Long userId,
+            @Parameter(description = "Profile picture") @RequestParam("file") MultipartFile picture) {
         try {
             return ResponseEntity.ok(userProfileService.updateProfilePicture(userId, picture));
         } catch (Exception e) {
@@ -61,8 +58,7 @@ public class UserProfileController {
     @Operation(summary = "Delete user profile")
     @DeleteMapping("/user/{userId}")
     public ResponseEntity<Void> deleteUserProfile(
-        @Parameter(description = "User ID") @PathVariable Long userId
-    ) {
+            @Parameter(description = "User ID") @PathVariable Long userId) {
         try {
             userProfileService.deleteUserProfile(userId);
             return ResponseEntity.ok().build();
