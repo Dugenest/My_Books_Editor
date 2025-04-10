@@ -1,9 +1,12 @@
 package com.afci.controller;
 
 import com.afci.service.BookService;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
@@ -13,12 +16,12 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
-import java.util.UUID;
 
 @RestController
 @RequestMapping("/api/books")
 public class BookImageController {
 
+    private static final Logger logger = LoggerFactory.getLogger(BookImageController.class);
     private final BookService bookService;
     private final String uploadDir;
 
@@ -32,52 +35,76 @@ public class BookImageController {
         try {
             // Ensure upload directory exists
             Files.createDirectories(Paths.get(uploadDir));
+            logger.info("Répertoire d'upload créé : {}", uploadDir);
         } catch (IOException e) {
-            throw new RuntimeException("Could not create upload directory", e);
+            logger.error("Erreur lors de la création du répertoire d'upload", e);
+            throw new RuntimeException("Impossible de créer le répertoire d'upload", e);
         }
     }
 
-    @PostMapping("/{bookId}/image")
+    @PostMapping(value = "/{id}/image", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<String> uploadBookImage(
-            @PathVariable Long bookId,
-            @RequestParam("picture") MultipartFile file) {
+            @PathVariable("id") Long bookId,
+            @RequestParam("file") MultipartFile file) {
         try {
-            // Validate file
-            if (file.isEmpty()) {
-                return ResponseEntity.badRequest().body("Please upload a valid image");
+            logger.info("Tentative d'upload d'image pour le livre {}", bookId);
+            logger.info("Content-Type reçu : {}", file.getContentType());
+            logger.info("Nom du fichier : {}", file.getOriginalFilename());
+            logger.info("Taille du fichier : {} bytes", file.getSize());
+
+            // Vérifier si un fichier a été fourni
+            if (file == null || file.isEmpty()) {
+                logger.warn("Aucun fichier n'a été fourni pour le livre {}", bookId);
+                return ResponseEntity.badRequest().body("Veuillez fournir une image valide");
             }
 
-            // Validate file type (optional but recommended)
+            // Vérifier le type de fichier
             String contentType = file.getContentType();
             if (contentType == null || !contentType.startsWith("image/")) {
-                return ResponseEntity.badRequest().body("Only image files are allowed");
+                logger.warn("Type de fichier invalide pour le livre {} : {}", bookId, contentType);
+                return ResponseEntity.badRequest().body("Seuls les fichiers image sont autorisés");
             }
 
-            // Generate unique filename
+            // Générer un nom de fichier unique
             String originalFilename = file.getOriginalFilename();
             String fileExtension = originalFilename != null
                     ? originalFilename.substring(originalFilename.lastIndexOf("."))
                     : "";
-            String uniqueFilename = bookId + "_" +
-                    UUID.randomUUID().toString() +
-                    fileExtension;
+            String uniqueFilename = bookId + "_" + System.currentTimeMillis() + fileExtension;
 
-            // Create full path
+            logger.info("Nom de fichier généré : {}", uniqueFilename);
+
+            // Créer le chemin complet
             Path targetLocation = Paths.get(uploadDir).resolve(uniqueFilename);
+            logger.info("Chemin cible : {}", targetLocation.toAbsolutePath());
 
-            // Copy file to target location
+            // Vérifier si le répertoire existe
+            Path uploadPath = Paths.get(uploadDir);
+            boolean exists = Files.exists(uploadPath);
+            boolean writable = Files.isWritable(uploadPath);
+            logger.info("Répertoire d'upload existe: {}, est accessible en écriture: {}", exists, writable);
+
+            if (!exists) {
+                Files.createDirectories(uploadPath);
+                logger.info("Répertoire d'upload créé: {}", uploadPath);
+            }
+
+            // Copier le fichier vers l'emplacement cible
             Files.copy(file.getInputStream(), targetLocation, StandardCopyOption.REPLACE_EXISTING);
+            logger.info("Fichier copié avec succès vers : {}", targetLocation);
 
-            // Construct relative path for database storage
+            // Construire le chemin relatif pour le stockage en base de données
             String relativePath = "/uploads/book-covers/" + uniqueFilename;
 
-            // Update book with image path in database
+            // Mettre à jour le livre avec le chemin de l'image en base de données
             bookService.updateBookImage(bookId, relativePath);
+            logger.info("Image mise à jour pour le livre {} : {}", bookId, relativePath);
 
             return ResponseEntity.ok(relativePath);
         } catch (IOException ex) {
+            logger.error("Erreur lors de l'upload de l'image pour le livre " + bookId, ex);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body("Could not upload image: " + ex.getMessage());
+                    .body("Erreur lors de l'upload de l'image : " + ex.getMessage());
         }
     }
 }

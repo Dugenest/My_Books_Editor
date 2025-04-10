@@ -200,12 +200,37 @@ public class UserController {
                 User user = userService.getUserByEmail(userEmail);
                 return ResponseEntity.ok(user);
             } catch (Exception e) {
-                return ResponseEntity.status(500)
-                        .body("Erreur lors de la récupération de l'utilisateur: " + e.getMessage());
+                return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                        .body(Map.of("error", "Erreur lors de la récupération de l'utilisateur"));
             }
         }
 
-        return ResponseEntity.status(401).body("Utilisateur non authentifié");
+        return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                .body(Map.of("error", "Utilisateur non authentifié"));
+    }
+
+    @GetMapping("/me/role")
+    public ResponseEntity<?> getCurrentUserRole() {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+
+        if (authentication != null && authentication.isAuthenticated()) {
+            String userEmail = authentication.getName();
+            try {
+                User user = userService.getUserByEmail(userEmail);
+                Map<String, Object> response = new HashMap<>();
+                response.put("role", user.getRole());
+                response.put("roles", authentication.getAuthorities().stream()
+                    .map(auth -> auth.getAuthority())
+                    .toList());
+                return ResponseEntity.ok(response);
+            } catch (Exception e) {
+                return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(Map.of("error", "Erreur lors de la récupération du rôle"));
+            }
+        }
+
+        return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+            .body(Map.of("error", "Utilisateur non authentifié"));
     }
 
     @GetMapping("/{userId}/stats")

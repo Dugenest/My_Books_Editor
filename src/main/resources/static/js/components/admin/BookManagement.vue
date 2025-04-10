@@ -194,13 +194,20 @@
               </div>
               
               <div class="form-group">
-                <label for="picture">URL de l'image</label>
-                <input 
-                  type="text" 
-                  class="form-control" 
-                  id="picture" 
-                  v-model="currentBook.picture"
-                >
+                <label for="picture">Image du livre</label>
+                <div class="image-upload-container">
+                  <input 
+                    type="file" 
+                    class="form-control" 
+                    id="picture" 
+                    accept="image/*"
+                    @change="handleImageUpload"
+                    ref="fileInput"
+                  >
+                  <div v-if="currentBook.picture" class="image-preview">
+                    <img :src="currentBook.picture" alt="Aperçu de l'image" class="preview-image">
+                  </div>
+                </div>
               </div>
               
               <div class="form-group">
@@ -588,6 +595,48 @@ export default {
       
       const date = new Date(dateString);
       return new Intl.DateTimeFormat('fr-FR').format(date);
+    },
+    
+    async handleImageUpload(event) {
+      const file = event.target.files[0];
+      if (!file) return;
+
+      console.log('📸 Fichier sélectionné:', {
+        type: file.type,
+        size: file.size,
+        name: file.name
+      });
+
+      try {
+        // Vérifier le type de fichier avant l'upload
+        const allowedTypes = ['image/png', 'image/jpeg', 'image/jpg'];
+        if (!allowedTypes.includes(file.type.toLowerCase())) {
+          alert('Seuls les fichiers PNG, JPEG et JPG sont acceptés');
+          return;
+        }
+
+        // Vérifier la taille minimale (1 Ko)
+        if (file.size < 1024) {
+          alert('L\'image doit faire au moins 1 Ko');
+          return;
+        }
+
+        // Vérifier la taille maximale (10 Mo)
+        if (file.size > 10 * 1024 * 1024) {
+          alert('L\'image ne doit pas dépasser 10 Mo');
+          return;
+        }
+
+        console.log('📤 Début de l\'upload...');
+        const imageUrl = await BookService.uploadBookImage(this.currentBook.id, file);
+        console.log('✅ Upload réussi, URL de l\'image:', imageUrl);
+        
+        this.currentBook.picture = imageUrl;
+        alert('Image uploadée avec succès');
+      } catch (error) {
+        console.error('❌ Erreur lors de l\'upload de l\'image:', error);
+        alert(error.message || 'Erreur lors de l\'upload de l\'image');
+      }
     }
   }
 };
@@ -672,5 +721,25 @@ export default {
 .categories-list {
   margin: 0;
   padding-left: 20px;
+}
+
+.image-upload-container {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.image-preview {
+  max-width: 200px;
+  max-height: 200px;
+  overflow: hidden;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+}
+
+.preview-image {
+  width: 100%;
+  height: auto;
+  object-fit: cover;
 }
 </style> 

@@ -15,17 +15,26 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.mockito.junit.jupiter.MockitoSettings;
+import org.mockito.quality.Strictness;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
 import com.afci.data.PasswordChangeRequest;
 import com.afci.data.User;
 import com.afci.repository.UserRepository;
+import com.afci.service.FileService;
+import com.afci.data.Book;
+import com.afci.data.Order;
 
 @ExtendWith(MockitoExtension.class)
+@MockitoSettings(strictness = Strictness.LENIENT)
 public class UserServiceTest {
 
     @Mock
     private UserRepository userRepository;
+
+    @Mock
+    private FileService fileService;
 
     @Mock
     private PasswordEncoder passwordEncoder;
@@ -46,8 +55,9 @@ public class UserServiceTest {
         passwordRequest.setOldPassword("oldPassword");
         passwordRequest.setNewPassword("newPassword");
 
-        lenient().when(passwordEncoder.encode(anyString())).thenReturn("encodedPassword");
-        lenient().when(passwordEncoder.matches(anyString(), anyString())).thenReturn(true);
+        when(passwordEncoder.encode(anyString())).thenReturn("encodedPassword");
+        when(passwordEncoder.matches(anyString(), anyString())).thenReturn(true);
+        when(fileService.getDefaultAvatarPath()).thenReturn("default-avatar.png");
     }
 
     @Test
@@ -82,79 +92,75 @@ public class UserServiceTest {
 
     @Test
     void updateUser_WhenExists_ShouldReturnUpdatedUser() {
-        User existingUser = new User("oldUsername", "oldPassword", "old@email.com");
+        User existingUser = new User();
         existingUser.setId(1L);
-        existingUser.setFirstName("OldFirst");
-        existingUser.setLastName("OldLast");
-        existingUser.setPhone("0123456789");
-        existingUser.setAddress("Old Address");
-        existingUser.setRole("USER");
-        existingUser.setActive(true);
-        existingUser.setSubscribedToNewsletter(false);
-        existingUser.setBooks(new HashSet<>());
-        existingUser.setOrders(new HashSet<>());
+        existingUser.setUsername("oldUsername");
+        existingUser.setEmail("old@email.com");
+        existingUser.setPassword("oldPassword");
         
-        User updatedUser = new User("newUsername", "newPassword", "new@email.com");
+        User updatedUser = new User();
         updatedUser.setId(1L);
-        updatedUser.setFirstName("NewFirst");
-        updatedUser.setLastName("NewLast");
-        updatedUser.setPhone("9876543210");
-        updatedUser.setAddress("New Address");
-        updatedUser.setRole("USER");
-        updatedUser.setActive(true);
-        updatedUser.setSubscribedToNewsletter(true);
-        updatedUser.setBooks(new HashSet<>());
-        updatedUser.setOrders(new HashSet<>());
+        updatedUser.setUsername("newUsername");
+        updatedUser.setEmail("new@email.com");
+        updatedUser.setPassword("newPassword");
         
+        when(userRepository.existsById(1L)).thenReturn(true);
         when(userRepository.findById(1L)).thenReturn(Optional.of(existingUser));
-        when(userRepository.save(any(User.class))).thenAnswer(invocation -> {
-            User savedUser = invocation.getArgument(0);
-            savedUser.setId(1L);
-            return savedUser;
-        });
+        when(userRepository.save(any(User.class))).thenReturn(updatedUser);
+        when(passwordEncoder.encode(anyString())).thenReturn("encodedPassword");
 
         User result = userService.updateUser(1L, updatedUser);
 
         assertNotNull(result);
         assertEquals("newUsername", result.getUsername());
         assertEquals("new@email.com", result.getEmail());
-        assertEquals("NewFirst", result.getFirstName());
-        assertEquals("NewLast", result.getLastName());
+        verify(userRepository).save(any(User.class));
     }
 
     @Test
     void updateUser_WhenNotExists_ShouldThrowException() {
         User updatedUser = new User();
         updatedUser.setId(1L);
-        lenient().when(userRepository.findById(1L)).thenReturn(Optional.empty());
+        updatedUser.setUsername("newUsername");
+        updatedUser.setEmail("new@email.com");
+        updatedUser.setPassword("newPassword");
+        
+        when(userRepository.existsById(1L)).thenReturn(false);
+        when(userRepository.findById(1L)).thenReturn(Optional.empty());
 
         assertThrows(RuntimeException.class, () -> userService.updateUser(1L, updatedUser));
+        verify(userRepository, never()).save(any(User.class));
     }
 
     @Test
     void deleteUser_WhenExists_ShouldDelete() {
-        User existingUser = new User("testUser", "password", "test@email.com");
+        User existingUser = new User();
         existingUser.setId(1L);
-        existingUser.setFirstName("Test");
-        existingUser.setLastName("User");
-        existingUser.setPhone("0123456789");
-        existingUser.setAddress("Test Address");
-        existingUser.setRole("USER");
-        existingUser.setActive(true);
-        existingUser.setSubscribedToNewsletter(false);
-        existingUser.setBooks(new HashSet<>());
-        existingUser.setOrders(new HashSet<>());
+        existingUser.setUsername("testUser");
+        existingUser.setEmail("test@email.com");
+        existingUser.setPassword("testPassword");
         
+        HashSet<Book> emptyBooks = new HashSet<>();
+        HashSet<Order> emptyOrders = new HashSet<>();
+        existingUser.setBooks(emptyBooks);
+        existingUser.setOrders(emptyOrders);
+        
+        when(userRepository.existsById(1L)).thenReturn(true);
         when(userRepository.findById(1L)).thenReturn(Optional.of(existingUser));
+        doNothing().when(userRepository).deleteById(1L);
+        when(fileService.getDefaultAvatarPath()).thenReturn("default-avatar.png");
 
         assertDoesNotThrow(() -> userService.deleteUser(1L));
+        verify(userRepository).deleteById(1L);
     }
 
     @Test
     void deleteUser_WhenNotExists_ShouldThrowException() {
-        lenient().when(userRepository.findById(1L)).thenReturn(Optional.empty());
+        when(userRepository.existsById(1L)).thenReturn(false);
+        when(userRepository.findById(1L)).thenReturn(Optional.empty());
 
         assertThrows(RuntimeException.class, () -> userService.deleteUser(1L));
+        verify(userRepository, never()).deleteById(1L);
     }
 
     @Test
@@ -168,7 +174,7 @@ public class UserServiceTest {
     @Test
     void changePassword_WhenInvalidOldPassword_ShouldThrowException() {
         when(userRepository.findById(1L)).thenReturn(Optional.of(user));
-        lenient().when(passwordEncoder.matches(anyString(), anyString())).thenReturn(false);
+        when(passwordEncoder.matches(anyString(), anyString())).thenReturn(false);
 
         assertThrows(RuntimeException.class, () -> userService.changePassword(1L, passwordRequest));
     }

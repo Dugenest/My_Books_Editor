@@ -1,37 +1,44 @@
 package com.afci.service;
 
-import com.afci.data.Book;
-import com.afci.data.Category;
-import com.afci.data.Author;
-import com.afci.data.Editor;
-import com.afci.dto.AuthorDTO;
-import com.afci.dto.BookDTO;
-import com.afci.dto.CategoryDTO;
-import com.afci.dto.EditorDTO;
-import com.afci.repository.BookRepository;
-import com.afci.repository.CategoryRepository;
-import com.afci.repository.AuthorRepository;
-import com.afci.repository.EditorRepository;
-
-import jakarta.persistence.EntityNotFoundException;
-
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
-import org.springframework.data.domain.Sort;
-
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageImpl;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Pageable;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.nio.file.StandardCopyOption;
+import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import java.util.ArrayList;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.StringUtils;
+import org.springframework.web.multipart.MultipartFile;
+
+import com.afci.data.Author;
+import com.afci.data.Book;
+import com.afci.data.Category;
+import com.afci.data.Editor;
+import com.afci.dto.AuthorDTO;
+import com.afci.dto.BookDTO;
+import com.afci.dto.CategoryDTO;
+import com.afci.dto.EditorDTO;
+import com.afci.repository.AuthorRepository;
+import com.afci.repository.BookRepository;
+import com.afci.repository.CategoryRepository;
+import com.afci.repository.EditorRepository;
+
+import jakarta.persistence.EntityNotFoundException;
 
 @Service
 @Transactional
@@ -592,4 +599,64 @@ public class BookService {
 
         return book.getCategories();
     }
+
+    /**
+     * Enregistre l'image d'un livre
+     * 
+     * @param bookId    ID du livre
+     * @param imageFile Fichier image
+     * @return URL de l'image enregistrée
+     * @throws Exception Si une erreur survient lors de l'enregistrement
+     */
+    public String saveBookImage(Long bookId, MultipartFile imageFile) throws Exception {
+        logger.info("Tentative d'enregistrement d'image pour le livre {}", bookId);
+
+        // Vérifier si le livre existe
+        Book book = bookRepository.findById(bookId)
+                .orElseThrow(() -> new EntityNotFoundException("Livre non trouvé avec l'ID: " + bookId));
+
+        // Vérifier si le fichier est vide
+        if (imageFile.isEmpty()) {
+            throw new IllegalArgumentException("Le fichier image est vide");
+        }
+
+        // Vérifier le type de fichier
+        String contentType = imageFile.getContentType();
+        if (contentType == null || !contentType.startsWith("image/")) {
+            throw new IllegalArgumentException("Le fichier doit être une image");
+        }
+
+        try {
+            // Créer le dossier de destination s'il n'existe pas
+            String uploadDir = "uploads/books";
+            Path uploadPath = Paths.get(uploadDir);
+            if (!Files.exists(uploadPath)) {
+                Files.createDirectories(uploadPath);
+            }
+
+            // Générer un nom de fichier unique
+            String originalFilename = StringUtils.cleanPath(imageFile.getOriginalFilename());
+            String fileExtension = "";
+            if (originalFilename.contains(".")) {
+                fileExtension = originalFilename.substring(originalFilename.lastIndexOf("."));
+            }
+            String filename = bookId + "_" + System.currentTimeMillis() + fileExtension;
+
+            // Enregistrer le fichier
+            Path filePath = uploadPath.resolve(filename);
+            Files.copy(imageFile.getInputStream(), filePath, StandardCopyOption.REPLACE_EXISTING);
+
+            // Mettre à jour l'URL de l'image dans l'entité Book
+            String imageUrl = "/uploads/books/" + filename;
+            book.setPicture(imageUrl); // Utilise setPicture() au lieu de setCoverImage()
+            bookRepository.save(book);
+
+            logger.info("Image enregistrée avec succès pour le livre {}: {}", bookId, imageUrl);
+            return imageUrl;
+        } catch (IOException e) {
+            logger.error("Erreur lors de l'enregistrement de l'image", e);
+            throw new Exception("Erreur lors de l'enregistrement de l'image: " + e.getMessage());
+        }
+    }
+
 }

@@ -62,7 +62,10 @@ public class SecurityConfig {
                         // Endpoints utilisateurs authentifiés
                         .requestMatchers("/api/users/**", "/api/baskets/**", "/api/comments/**", "/api/orders/**")
                         .permitAll()
+                        .requestMatchers("/api/admin/author/**").hasRole("AUTHOR")
+                        .requestMatchers("/api/admin/editor/**").hasRole("EDITOR")
                         .anyRequest().permitAll())
+        
                 // Activer l'authentification par formulaire avec redirection personnalisée
                 .formLogin(form -> form
                         .disable())

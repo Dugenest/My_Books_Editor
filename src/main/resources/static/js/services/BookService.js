@@ -190,6 +190,63 @@ class BookService {
             throw error;
         }
     }
+
+    // Upload d'une image pour un livre
+    async uploadBookImage(bookId, file) {
+        try {
+            console.log('📸 Tentative d\'upload d\'image pour le livre', bookId);
+            console.log('📄 Détails du fichier:', {
+                type: file.type,
+                size: file.size,
+                name: file.name
+            });
+
+            // Vérifier si le fichier est valide
+            if (!file) {
+                throw new Error('Aucun fichier sélectionné');
+            }
+
+            // Vérifier le type de fichier
+            const allowedTypes = ['image/png', 'image/jpeg', 'image/jpg'];
+            if (!allowedTypes.includes(file.type.toLowerCase())) {
+                throw new Error('Seuls les fichiers PNG, JPEG et JPG sont acceptés');
+            }
+
+            // Vérifier la taille minimale (1 Ko)
+            if (file.size < 1024) {
+                throw new Error('L\'image doit faire au moins 1 Ko');
+            }
+
+            // Vérifier la taille maximale (10 Mo)
+            if (file.size > 10 * 1024 * 1024) {
+                throw new Error('L\'image ne doit pas dépasser 10 Mo');
+            }
+
+            const formData = new FormData();
+            formData.append('file', file);
+
+            console.log('📤 Envoi de la requête d\'upload...');
+            const response = await fetch(`${api.defaults.baseURL}/books/${bookId}/image`, {
+                method: 'POST',
+                body: formData,
+                headers: {
+                    'Authorization': `Bearer ${localStorage.getItem('token')}`
+                },
+                credentials: 'include'
+            });
+
+            if (!response.ok) {
+                throw new Error(`Erreur lors de l'upload: ${response.status} ${response.statusText}`);
+            }
+
+            const data = await response.text();
+            console.log('✅ Image uploadée avec succès:', data);
+            return data;
+        } catch (error) {
+            console.error('❌ Erreur lors de l\'upload de l\'image:', error);
+            throw error;
+        }
+    }
 }
 
 export default new BookService(); 

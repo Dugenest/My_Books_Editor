@@ -27,18 +27,29 @@ public class UserDetailsServiceImpl implements UserDetailsService {
         User user = userRepository.findByEmail(email)
                 .orElseThrow(() -> new UsernameNotFoundException("Utilisateur non trouvé avec l'email: " + email));
         
-        // Création d'une seule autorité à partir du rôle unique
         List<GrantedAuthority> authorities = new ArrayList<>();
-        if (user.getRole() != null && !user.getRole().isEmpty()) {
+        
+        // Récupérer le rôle de l'utilisateur depuis la base de données
+        String role = user.getRole();
+        if (role != null && !role.isEmpty()) {
             // Ajouter le préfixe ROLE_ si nécessaire
-            String roleWithPrefix = user.getRole().startsWith("ROLE_") 
-                ? user.getRole() 
-                : "ROLE_" + user.getRole();
+            String roleWithPrefix = role.startsWith("ROLE_") ? role : "ROLE_" + role;
             authorities.add(new SimpleGrantedAuthority(roleWithPrefix));
+            
+            // Ajouter les rôles supplémentaires selon le type d'utilisateur
+            if (role.equals("ADMIN")) {
+                authorities.add(new SimpleGrantedAuthority("ROLE_AUTHOR"));
+                authorities.add(new SimpleGrantedAuthority("ROLE_EDITOR"));
+                authorities.add(new SimpleGrantedAuthority("ROLE_USER"));
+            } else if (role.equals("AUTHOR")) {
+                authorities.add(new SimpleGrantedAuthority("ROLE_USER"));
+            } else if (role.equals("EDITOR")) {
+                authorities.add(new SimpleGrantedAuthority("ROLE_USER"));
+            }
         }
         
         return new org.springframework.security.core.userdetails.User(
-                user.getEmail(), // Utiliser l'email comme identifiant
+                user.getEmail(),
                 user.getPassword(),
                 user.isActive(),
                 true, 

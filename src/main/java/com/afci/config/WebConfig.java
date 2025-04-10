@@ -3,6 +3,7 @@ package com.afci.config;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.converter.json.Jackson2ObjectMapperBuilder;
+import org.springframework.web.servlet.config.annotation.CorsRegistry;
 import org.springframework.web.servlet.config.annotation.ResourceHandlerRegistry;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 import org.springframework.web.multipart.MultipartResolver;
@@ -18,9 +19,15 @@ public class WebConfig implements WebMvcConfigurer {
 
     @Bean
     public ObjectMapper objectMapper() {
+        Hibernate5JakartaModule hibernateModule = new Hibernate5JakartaModule();
+        hibernateModule.configure(Hibernate5JakartaModule.Feature.FORCE_LAZY_LOADING, false);
+        hibernateModule.configure(Hibernate5JakartaModule.Feature.SERIALIZE_IDENTIFIER_FOR_LAZY_NOT_LOADED_OBJECTS, true);
+        hibernateModule.configure(Hibernate5JakartaModule.Feature.USE_TRANSIENT_ANNOTATION, true);
+
         return Jackson2ObjectMapperBuilder.json()
-                .modules(new Hibernate5JakartaModule(), new JavaTimeModule())
+                .modules(hibernateModule, new JavaTimeModule())
                 .featuresToDisable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS)
+                .featuresToDisable(SerializationFeature.FAIL_ON_EMPTY_BEANS)
                 .build();
     }
 
@@ -31,12 +38,39 @@ public class WebConfig implements WebMvcConfigurer {
 
     @Override
     public void addResourceHandlers(ResourceHandlerRegistry registry) {
-        // Configure resource handler for uploads
-        registry.addResourceHandler("/uploads/**")
-                .addResourceLocations("file:./uploads/", "classpath:/static/uploads/");
+        // Configure resource handler for book covers
+        registry.addResourceHandler("/uploads/book-covers/**")
+                .addResourceLocations("file:uploads/book-covers/")
+                .setCachePeriod(3600)
+                .resourceChain(true);
 
-        // Configure resource handler for default avatars
+        // Configure resource handler for avatars
+        registry.addResourceHandler("/uploads/avatars/**")
+                .addResourceLocations("file:uploads/avatars/")
+                .setCachePeriod(3600)
+                .resourceChain(true);
+
+        // Configure resource handler for default images
+        registry.addResourceHandler("/img/**")
+                .addResourceLocations("classpath:/static/img/")
+                .setCachePeriod(3600)
+                .resourceChain(true);
+
+        // Configure resource handler for default assets
         registry.addResourceHandler("/assets/**")
-                .addResourceLocations("classpath:/static/assets/");
+                .addResourceLocations("classpath:/static/assets/")
+                .setCachePeriod(3600)
+                .resourceChain(true);
+    }
+
+    @Override
+    public void addCorsMappings(CorsRegistry registry) {
+        registry.addMapping("/**")
+                .allowedOriginPatterns("*")
+                .allowedMethods("GET", "POST", "PUT", "DELETE", "OPTIONS")
+                .allowedHeaders("*")
+                .exposedHeaders("Authorization", "Content-Type", "Content-Disposition")
+                .allowCredentials(true)
+                .maxAge(3600);
     }
 }
