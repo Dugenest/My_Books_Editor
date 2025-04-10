@@ -43,9 +43,10 @@
             <td>{{ book.id }}</td>
             <td>
               <img 
-                :src="book.picture || '/img/book-placeholder.png'" 
+                :src="getBookImageUrl(book)" 
                 alt="Couverture"
                 class="thumbnail"
+                @error="handleImageError($event, book)"
               >
             </td>
             <td>{{ book.title }}</td>
@@ -205,7 +206,7 @@
                     ref="fileInput"
                   >
                   <div v-if="currentBook.picture" class="image-preview">
-                    <img :src="currentBook.picture" alt="Aperçu de l'image" class="preview-image">
+                    <img :src="getBookImageUrl(currentBook)" alt="Aperçu de l'image" class="preview-image" @error="handleImageError($event, currentBook)">
                   </div>
                 </div>
               </div>
@@ -302,8 +303,9 @@
             <div class="book-details">
               <div class="book-cover">
                 <img 
-                  :src="selectedBook.picture || '/img/book-placeholder.png'" 
+                  :src="getBookImageUrl(selectedBook)" 
                   alt="Couverture"
+                  @error="handleImageError($event, selectedBook)"
                 >
               </div>
               <div class="book-info">
@@ -405,6 +407,21 @@ export default {
         this.loading = true;
         const response = await BookService.getBooks(this.currentPage, this.pageSize);
         this.books = response.content;
+        
+        // Débogage des URLs d'images
+        if (this.books && this.books.length > 0) {
+          console.log('📚 Liste des livres chargés:', this.books.length);
+          this.books.forEach((book, index) => {
+            const rawPicture = book.picture || 'pas d\'image';
+            const correctedUrl = this.getBookImageUrl(book);
+            console.log(`📘 Livre ${index + 1} (ID: ${book.id}): 
+              - URL brute: ${rawPicture}
+              - URL corrigée: ${correctedUrl}`);
+          });
+        } else {
+          console.log('📚 Aucun livre trouvé dans la réponse');
+        }
+        
         this.totalPages = response.totalPages;
         this.totalElements = response.totalElements;
       } catch (error) {
@@ -637,6 +654,16 @@ export default {
         console.error('❌ Erreur lors de l\'upload de l\'image:', error);
         alert(error.message || 'Erreur lors de l\'upload de l\'image');
       }
+    },
+    
+    handleImageError(event, book) {
+      console.error(`❌ Erreur lors du chargement de l'image pour le livre ID=${book?.id || 'inconnu'}:`, event.target.src);
+      console.log(`📋 Détails du livre avec image problématique:`, JSON.stringify(book?.picture || 'pas d\'image'));
+      event.target.src = '/uploads/book-covers/default-cover.jpg';
+    },
+    
+    getBookImageUrl(book) {
+      return BookService.getBookImageUrl(book);
     }
   }
 };

@@ -95,6 +95,7 @@ public class BookImageController {
 
             // Construire le chemin relatif pour le stockage en base de données
             String relativePath = "/uploads/book-covers/" + uniqueFilename;
+            logger.info("Chemin relatif généré pour l'image : {}", relativePath);
 
             // Mettre à jour le livre avec le chemin de l'image en base de données
             bookService.updateBookImage(bookId, relativePath);

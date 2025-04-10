@@ -24,7 +24,7 @@
         <div v-for="item in basketBooks" :key="item.id" class="basket-item card mb-3">
           <div class="row no-gutters">
             <div class="col-md-2">
-              <img :src="item.book.picture || '/img/default-cover.jpg'" 
+              <img :src="item.book.picture || '/uploads/book-covers/default-cover.jpg'" 
                    :alt="item.book.title"
                    class="card-img">
             </div>
