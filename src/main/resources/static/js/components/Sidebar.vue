@@ -113,7 +113,9 @@ export default {
   methods: {
     hasRole(role) {
       if (!this.user || !this.user.roles) return false;
-      return this.user.roles.includes(role);
+      
+      // Vérifier avec et sans le préfixe ROLE_
+      return this.user.roles.includes(role) || this.user.roles.includes('ROLE_' + role);
     }
   }
 };

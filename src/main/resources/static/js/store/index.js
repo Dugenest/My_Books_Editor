@@ -54,6 +54,17 @@ export default new Vuex.Store({
   getters: {
     isAuthenticated: state => !!state.token,
     currentUser: state => state.user,
-    userRoles: state => state.user?.roles || []
+    userRoles: state => {
+      const roles = state.user?.roles || [];
+      // Normaliser les rôles (avec et sans préfixe ROLE_)
+      return roles.map(role => {
+        // Si le rôle commence par ROLE_, retourner aussi la version sans préfixe
+        if (role.startsWith('ROLE_')) {
+          return role.substring(5);
+        }
+        return role;
+      });
+    },
+    isInitialized: state => !!state.user
   }
 }); 

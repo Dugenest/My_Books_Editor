@@ -61,6 +61,23 @@ public class WebConfig implements WebMvcConfigurer {
                 .addResourceLocations("classpath:/static/assets/")
                 .setCachePeriod(3600)
                 .resourceChain(true);
+                
+        // Configure resource handler for static js/css files
+        registry.addResourceHandler("/js/**")
+                .addResourceLocations("classpath:/static/js/")
+                .setCachePeriod(3600)
+                .resourceChain(true);
+                
+        registry.addResourceHandler("/css/**")
+                .addResourceLocations("classpath:/static/css/")
+                .setCachePeriod(3600)
+                .resourceChain(true);
+                
+        // Configure resource handler for the index.html
+        registry.addResourceHandler("/index.html")
+                .addResourceLocations("classpath:/static/index.html")
+                .setCachePeriod(0)  // Ne pas mettre en cache l'index.html
+                .resourceChain(true);
     }
 
     @Override

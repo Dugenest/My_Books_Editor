@@ -1,6 +1,7 @@
 import Vue from 'vue';
 import VueRouter from 'vue-router';
-import { authGuard, adminGuard, authorGuard, editorGuard, userGuard } from './guards';
+import { authGuard, adminGuard, authorGuard, editorGuard, userGuard, roleGuard } from './guards';
+import store from '../store';
 
 Vue.use(VueRouter);
 
@@ -140,6 +141,57 @@ router.beforeEach((to, from, next) => {
   if (!store.getters.isInitialized) {
     store.dispatch('initializeStore');
   }
+  
+  // Liste des routes qui nécessitent une authentification
+  const authRequiredRoutes = [
+    '/dashboard', 
+    '/dashboard/users', 
+    '/dashboard/authors', 
+    '/dashboard/editors',
+    '/dashboard/categories',
+    '/dashboard/books'
+  ];
+  
+  // Vérifier si la route actuelle commence par une des routes protégées
+  const requiresAuth = authRequiredRoutes.some(route => 
+    to.path === route || to.path.startsWith(route + '/')
+  );
+  
+  // Si la route nécessite une authentification et que l'utilisateur n'est pas connecté
+  if (requiresAuth && !store.getters.isAuthenticated) {
+    console.log('Redirection vers login: utilisateur non authentifié pour', to.path);
+    return next('/login');
+  }
+  
+  // Vérification des rôles pour les routes spécifiques
+  const userRoles = store.getters.userRoles || [];
+  console.log('Rôles utilisateur actuels:', userRoles);
+  
+  // Mappings des routes vers les rôles requis
+  const roleRequirements = {
+    '/dashboard/users': ['ADMIN'],
+    '/dashboard/categories': ['ADMIN'],
+    '/dashboard/authors': ['ADMIN', 'AUTHOR'],
+    '/dashboard/editors': ['ADMIN', 'EDITOR'],
+    '/dashboard/books': ['ADMIN', 'EDITOR'],
+    '/dashboard': ['ADMIN', 'EDITOR']
+  };
+  
+  // Vérifier si la route actuelle a des exigences spécifiques de rôle
+  for (const [route, requiredRoles] of Object.entries(roleRequirements)) {
+    if (to.path === route || to.path.startsWith(route + '/')) {
+      const hasRequiredRole = requiredRoles.some(role => userRoles.includes(role));
+      
+      if (!hasRequiredRole) {
+        console.log('Redirection vers unauthorized: rôle insuffisant pour', to.path);
+        console.log('Rôles requis:', requiredRoles, 'Rôles utilisateur:', userRoles);
+        return next('/unauthorized');
+      }
+      
+      break;
+    }
+  }
+  
   next();
 });
 
